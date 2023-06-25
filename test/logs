@@ -1,0 +1,7 @@
+
+make: 'obj/error.o' is up to date.
+make: Nothing to be done for 'obj/hash.o'.
+make: 'obj/mem.o' is up to date.
+make: 'obj/read.o' is up to date.
+mkdir: cannot create directory ‘test/bin’: File exists
+mkdir: cannot create directory ‘test/obj’: File exists
