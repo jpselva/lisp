@@ -23,7 +23,7 @@ obj* alloc_cons(obj* car, obj* cdr) {
    return new_obj;
 }
 
-obj* alloc_number(double num) {
+obj* alloc_number(int num) {
    obj* new_obj = alloc(); 
 
    new_obj->type = NUMBER;

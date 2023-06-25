@@ -8,7 +8,7 @@ GCCOPTS="-pedantic -Wall -g -O2"
 echo "" >test/logs
 
 # build obj files
-make obj/*.o &>>test/logs
+make &>>test/logs
 
 mkdir ${TESTBINS} &>>test/logs
 mkdir ${TESTOBJS} &>>test/logs
@@ -22,3 +22,8 @@ gcc $GCCOPTS ${TESTOBJS}/mem.o obj/mem.o -o ${TESTBINS}/mem
 gcc $GCCOPTS -c test/read.c -o ${TESTOBJS}/read.o
 gcc $GCCOPTS ${TESTOBJS}/read.o obj/mem.o obj/read.o -o ${TESTBINS}/read
 ./${TESTBINS}/read
+
+# env.c
+gcc $GCCOPTS -c test/env.c -o ${TESTOBJS}/env.o
+gcc $GCCOPTS ${TESTOBJS}/env.o obj/mem.o obj/env.o -o ${TESTBINS}/env
+./${TESTBINS}/env

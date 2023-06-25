@@ -1,7 +1,8 @@
 
-make: 'obj/error.o' is up to date.
-make: Nothing to be done for 'obj/hash.o'.
-make: 'obj/mem.o' is up to date.
-make: 'obj/read.o' is up to date.
+gcc  obj/env.o  obj/error.o  obj/mem.o  obj/read.o -o lisp
+/usr/bin/ld: /usr/lib/gcc/x86_64-pc-linux-gnu/13.1.1/../../../../lib/Scrt1.o: in function `_start':
+(.text+0x1b): undefined reference to `main'
+collect2: error: ld returned 1 exit status
+make: *** [Makefile:12: lisp] Error 1
 mkdir: cannot create directory ‘test/bin’: File exists
 mkdir: cannot create directory ‘test/obj’: File exists

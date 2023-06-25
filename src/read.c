@@ -2,6 +2,7 @@
 #include <ctype.h>
 #include "lisp.h"
 #define MAXTEXT 256
+#define isparens(c) ((c == '(') || (c == ')'))
 
 char peek(FILE* stream) {
     char c;
@@ -32,24 +33,39 @@ obj* readstring(FILE* stream) {
     char string[MAXTEXT];
     char* s = string;
 
-    while ((*s = getc(stream)) != '"') {
+    while ((*s++ = getc(stream)) != '"') {
         if (s - string == MAXTEXT)
             error("max string length reached");
     }
 
-    *s = '\0';
+    *--s = '\0';
     return alloc_string(string);
+}
+
+
+obj* readnumber(FILE* stream) {
+    int number = 0;
+    char c;
+
+    while (isdigit(c = getc(stream))) {
+        number *= 10;
+        number += c - '0';
+    }
+
+    ungetc(c, stream);
+    return alloc_number(number);
 }
 
 obj* readsymbol(FILE* stream) {
     char symbol[MAXTEXT];
     char* s = symbol;
 
-    while (isalnum(*s = getc(stream))) {
+    while (isgraph(*s++ = getc(stream)) && !isparens(*(s-1))) {
         if (s - symbol == MAXTEXT)
             error("max symbol length reached");
     }
 
+    s -= 1;
     ungetc(*s, stream);
     *s = '\0';
     return alloc_symbol(symbol);
@@ -64,9 +80,10 @@ obj* read(FILE* stream) {
     } else if (c == '"') {
         getc(stream);
         return readstring(stream);
-    } else if (isalpha(c)) {
+    } else if (isdigit(c)) {
+        return readnumber(stream);
+    } else {
         return readsymbol(stream);
-    } else
-        error("unexpected character");
+    }
 }
 
