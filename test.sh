@@ -32,3 +32,8 @@ gcc $GCCOPTS ${TESTOBJS}/env.o obj/mem.o obj/env.o -o ${TESTBINS}/env
 gcc $GCCOPTS -c test/apply.c -o ${TESTOBJS}/apply.o
 gcc $GCCOPTS ${TESTOBJS}/apply.o obj/mem.o obj/env.o obj/apply.o -o ${TESTBINS}/apply
 ./${TESTBINS}/apply
+
+# eval.c
+gcc $GCCOPTS -c test/eval.c -o ${TESTOBJS}/eval.o
+gcc $GCCOPTS ${TESTOBJS}/eval.o obj/apply.o obj/mem.o obj/env.o obj/eval.o -o ${TESTBINS}/eval
+./${TESTBINS}/eval
