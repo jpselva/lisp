@@ -8,18 +8,18 @@ int main() {
     char* mock_input = "(func arg1 (concat \"hello\" \"world\")\n\t(+ 7 25))";
     FILE* stream = fmemopen(mock_input, strlen(mock_input), "r");
 
-    obj* exp = read(stream);
+    Obj* exp = read(stream);
     test("whole list", exp->type == CONS);
 
-    obj* exp1 = exp->car;
+    Obj* exp1 = exp->car;
     test("symbol operator", (exp1->type == SYMBOL));
     test("symbol operator", !strcmp(exp1->string, "func"));
     
-    obj* exp2 = exp->cdr->car;
+    Obj* exp2 = exp->cdr->car;
     test("symbol operand", (exp2->type == SYMBOL));
     test("symbol operand", !strcmp(exp2->string, "arg1"));
 
-    obj* exp3 = exp->cdr->cdr->car;
+    Obj* exp3 = exp->cdr->cdr->car;
     test("sublist operand", exp3->type == CONS);
     test("sublist operand", exp3->car->type == SYMBOL);
     test("sublist operand", !strcmp(exp3->car->string, "concat"));
@@ -29,7 +29,7 @@ int main() {
     test("sublist operand", !strcmp(exp3->cdr->cdr->car->string, "world"));
     test("sublist operand", exp3->cdr->cdr->cdr == NULL);
 
-    obj* exp4 = exp->cdr->cdr->cdr->car;
+    Obj* exp4 = exp->cdr->cdr->cdr->car;
     test("math operators", exp4->car->type == SYMBOL);
     test("math operators", !strcmp(exp4->car->string, "+"));
     test("numbers 1", exp4->cdr->car->type == NUMBER);
@@ -37,7 +37,7 @@ int main() {
     test("numbers 2", exp4->cdr->cdr->car->type == NUMBER);
     test("numbers 2", exp4->cdr->cdr->car->number == 25);
 
-    obj* end = exp->cdr->cdr->cdr->cdr;
+    Obj* end = exp->cdr->cdr->cdr->cdr;
     test("ends list with NULL", end == NULL);
 
     /**** test 2 ****/

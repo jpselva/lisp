@@ -8,12 +8,12 @@ int main() {
     testsuite("env.c");
 
     /**** 1st part - one frame ****/
-    obj* vars1 = C(SYM("x"), C(SYM("y"), C(SYM("z"), NULL)));
-    obj* values1 = C(NUM(1), C(NUM(2), C(NUM(3), NULL)));
+    Obj* vars1 = C(SYM("x"), C(SYM("y"), C(SYM("z"), NULL)));
+    Obj* values1 = C(NUM(1), C(NUM(2), C(NUM(3), NULL)));
 
-    obj* env = extend_environment(vars1, values1, NULL);
+    Env env = extend_environment(vars1, values1, NULL);
 
-    obj* lookup_val = lookup(SYM("y"), env);
+    Obj* lookup_val = lookup(SYM("y"), env);
     test("variable lookup single frame", lookup_val->type == NUMBER);
     test("variable lookup single frame", lookup_val->number == 2);
 
@@ -21,14 +21,14 @@ int main() {
     test("variable set single frame", lookup(SYM("z"), env)->number == 10);
 
     define_variable(SYM("a"), NUM(42), env);
-    obj* frame = env->car;
+    Obj* frame = env->car;
     test("variable def single frame", frame->car->car == SYM("a"));
     test("variable def single frame", frame->cdr->car->type == NUMBER);
     test("variable def single frame", frame->cdr->car->number == 42);
 
     /**** 2nd part - two frames ****/
-    obj* vars2 = C(SYM("y"), NULL);
-    obj* vals2 = C(NUM(300), NULL);
+    Obj* vars2 = C(SYM("y"), NULL);
+    Obj* vals2 = C(NUM(300), NULL);
     env = extend_environment(vars2, vals2, env);
 
     lookup_val = lookup(SYM("x"), env);
@@ -44,8 +44,8 @@ int main() {
     test("vars in earlier frames shadow those in later frames", lookup_val->number == 300);
 
     set_variable(SYM("y"), NUM(200), env);
-    obj* shadowed_y = lookup(SYM("y"), env->cdr); 
-    obj* actual_y = lookup(SYM("y"), env);
+    Obj* shadowed_y = lookup(SYM("y"), env->cdr); 
+    Obj* actual_y = lookup(SYM("y"), env);
     test("set should't alter shadowed variables", shadowed_y->number == 2);
     test("set altered variable's earliest occurrence in a frame", actual_y->number == 200);
 

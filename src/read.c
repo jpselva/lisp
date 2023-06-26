@@ -11,11 +11,11 @@ char peek(FILE* stream) {
     return c;
 }
 
-obj* read(FILE*);
+Obj* read(FILE*);
 
-obj* readlist(FILE* stream) {
-    obj head = { .cdr = NULL };
-    obj* exp = &head;
+Obj* readlist(FILE* stream) {
+    Obj head = { .cdr = NULL };
+    Obj* exp = &head;
     char c;
 
    while ((c = peek(stream)) != ')') {
@@ -29,7 +29,7 @@ obj* readlist(FILE* stream) {
    return head.cdr;
 }
 
-obj* readstring(FILE* stream) {
+Obj* readstring(FILE* stream) {
     char string[MAXTEXT];
     char* s = string;
 
@@ -43,7 +43,7 @@ obj* readstring(FILE* stream) {
 }
 
 
-obj* readnumber(FILE* stream) {
+Obj* readnumber(FILE* stream) {
     int number = 0;
     char c;
 
@@ -56,7 +56,7 @@ obj* readnumber(FILE* stream) {
     return alloc_number(number);
 }
 
-obj* readsymbol(FILE* stream) {
+Obj* readsymbol(FILE* stream) {
     char symbol[MAXTEXT];
     char* s = symbol;
 
@@ -71,7 +71,7 @@ obj* readsymbol(FILE* stream) {
     return alloc_symbol(symbol);
 }
 
-obj* read(FILE* stream) {
+Obj* read(FILE* stream) {
     char c = peek(stream);
 
     if (c == '(') {
