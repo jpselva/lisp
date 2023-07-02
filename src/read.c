@@ -14,14 +14,14 @@ char peek(FILE* stream) {
 Obj* read(FILE*);
 
 Obj* readlist(FILE* stream) {
-    Obj head = { .cdr = NULL };
+    Obj head = { .cdr = NIL };
     Obj* exp = &head;
     char c;
 
    while ((c = peek(stream)) != ')') {
        if (c == EOF)
            error("expected closing ')' but got EOF");
-       exp->cdr = alloc_cons(read(stream), NULL);
+       exp->cdr = alloc_cons(read(stream), NIL);
        exp = exp->cdr;
    }
 

@@ -32,7 +32,7 @@ Obj* alloc_number(int num) {
    return new_obj;
 }
 
-Obj* alloc_primitive(PrimitiveFunc prim) {
+Obj* alloc_primitive(Primitive prim) {
    Obj* new_obj = alloc(); 
 
    new_obj->type = PRIMITIVE;
@@ -70,3 +70,11 @@ Obj* alloc_symbol(const char* sym) {
    return new_obj;
 }
 
+Obj* alloc_special_form(SpecialForm sf) {
+    Obj* new_obj = alloc(); 
+    
+    new_obj->type = SPECIAL_FORM;
+    new_obj->special_form = sf;
+
+    return new_obj;
+}

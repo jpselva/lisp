@@ -9,8 +9,6 @@
 #define first_frame(env) env->car
 #define rest_frames(env) env->cdr
 
-typedef Obj* Env;
-
 Obj* make_frame(Obj* vars, Obj* values) {
     return alloc_cons(vars, values);
 }
@@ -25,7 +23,7 @@ void define_variable(Obj* var, Obj* value, Env env) {
     Obj* frame = first_frame(env);
     Obj* var_scan = frame_vars(frame);
 
-    while (var_scan != NULL) {
+    while (var_scan != NIL) {
         if (var_scan->car == var)
             error("redefinition of variable");
         var_scan = var_scan->cdr;
@@ -37,16 +35,14 @@ void define_variable(Obj* var, Obj* value, Env env) {
 }
 
 void set_variable(Obj* var, Obj* value, Env env) {
-    Obj* frame = first_frame(env);
-    Obj* var_scan = frame_vars(frame);
-    Obj* value_scan = frame_values(frame);
+    Obj* frame, *var_scan, *value_scan; 
 
-    for (; env != NULL; env = rest_frames(env)) {
+    for (; env != NIL; env = rest_frames(env)) {
         frame = first_frame(env);
         var_scan = frame_vars(frame);
         value_scan = frame_values(frame);
 
-        while (var_scan != NULL) {
+        while (var_scan != NIL) {
             if (var_scan->car == var) {
                 value_scan->car = value;
                 return;
@@ -61,12 +57,12 @@ void set_variable(Obj* var, Obj* value, Env env) {
 Obj* lookup(Obj* var, Env env) {
     Obj* frame, *var_scan, *value_scan; 
 
-    for (; env != NULL; env = rest_frames(env)) {
+    for (; env != NIL; env = rest_frames(env)) {
         frame = first_frame(env);
         var_scan = frame_vars(frame);
         value_scan = frame_values(frame);
 
-        while (var_scan != NULL) {
+        while (var_scan != NIL) {
             if (var_scan->car == var)
                 return value_scan->car;
             var_scan = var_scan->cdr;

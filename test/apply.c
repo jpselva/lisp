@@ -25,7 +25,7 @@ int main() {
 
     /**** 1st part - primitive ****/
     Obj* primitive = alloc_primitive(test_primitive);
-    Obj* args = C(NUM(2), C(NUM(3), NULL));
+    Obj* args = C(NUM(2), C(NUM(3), NIL));
 
     Obj* result = apply(primitive, args);
 
@@ -33,9 +33,9 @@ int main() {
     test("applies primitive", result->number == 5);
 
     /**** 2nd part - lambda ****/
-    Env base_env = extend_environment(C(SYM("x"), NULL), C(NUM(1), NULL), NULL);
-    Obj* params = C(SYM("arg1"), C(SYM("arg2"), NULL));
-    Obj* body = C(SYM("+"), C(SYM("arg1"), C(SYM("arg2"), NULL)));
+    Env base_env = extend_environment(C(SYM("x"), NIL), C(NUM(1), NIL), NIL);
+    Obj* params = C(SYM("arg1"), C(SYM("arg2"), NIL));
+    Obj* body = C(SYM("+"), C(SYM("arg1"), C(SYM("arg2"), NIL)));
     Lambda proc = make_lambda(params, body, base_env);
 
     result = apply(proc, args);

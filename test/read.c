@@ -27,7 +27,7 @@ int main() {
     test("sublist operand", !strcmp(exp3->cdr->car->string, "hello"));
     test("sublist operand", exp3->cdr->cdr->car->type == STRING);
     test("sublist operand", !strcmp(exp3->cdr->cdr->car->string, "world"));
-    test("sublist operand", exp3->cdr->cdr->cdr == NULL);
+    test("sublist operand", exp3->cdr->cdr->cdr == NIL);
 
     Obj* exp4 = exp->cdr->cdr->cdr->car;
     test("math operators", exp4->car->type == SYMBOL);
@@ -38,21 +38,21 @@ int main() {
     test("numbers 2", exp4->cdr->cdr->car->number == 25);
 
     Obj* end = exp->cdr->cdr->cdr->cdr;
-    test("ends list with NULL", end == NULL);
+    test("ends list with NIL", end == NIL);
 
     /**** test 2 ****/
     char* mock_input2 = "()";
     FILE* stream2 = fmemopen(mock_input2, strlen(mock_input2), "r");
 
     exp = read(stream2);
-    test("empty list", exp == NULL);
+    test("empty list", exp == NIL);
 
     /**** test 3 ****/
     char* mock_input3 = "(())";
     FILE* stream3 = fmemopen(mock_input3, strlen(mock_input3), "r");
 
     exp = read(stream3);
-    test("empty list inside list", exp->car == NULL);
+    test("empty list inside list", exp->car == NIL);
 
     return 0;
 }

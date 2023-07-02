@@ -8,10 +8,10 @@ int main() {
     testsuite("env.c");
 
     /**** 1st part - one frame ****/
-    Obj* vars1 = C(SYM("x"), C(SYM("y"), C(SYM("z"), NULL)));
-    Obj* values1 = C(NUM(1), C(NUM(2), C(NUM(3), NULL)));
+    Obj* vars1 = C(SYM("x"), C(SYM("y"), C(SYM("z"), NIL)));
+    Obj* values1 = C(NUM(1), C(NUM(2), C(NUM(3), NIL)));
 
-    Env env = extend_environment(vars1, values1, NULL);
+    Env env = extend_environment(vars1, values1, NIL);
 
     Obj* lookup_val = lookup(SYM("y"), env);
     test("variable lookup single frame", lookup_val->type == NUMBER);
@@ -27,8 +27,8 @@ int main() {
     test("variable def single frame", frame->cdr->car->number == 42);
 
     /**** 2nd part - two frames ****/
-    Obj* vars2 = C(SYM("y"), NULL);
-    Obj* vals2 = C(NUM(300), NULL);
+    Obj* vars2 = C(SYM("y"), NIL);
+    Obj* vals2 = C(NUM(300), NIL);
     env = extend_environment(vars2, vals2, env);
 
     lookup_val = lookup(SYM("x"), env);
