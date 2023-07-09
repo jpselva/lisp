@@ -7,4 +7,4 @@
 #define test(descr, cond)                         \
     ((cond) ?                                     \
         printf("  PASS: %s\n", descr) :          \
-        printf("  FAIL: %s (%s)\n", descr, #cond));
+        printf(">>FAIL: %s (%s)\n", descr, #cond));

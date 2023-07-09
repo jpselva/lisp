@@ -14,19 +14,20 @@ char peek(FILE* stream) {
 Obj* read(FILE*);
 
 Obj* readlist(FILE* stream) {
-    Obj head = { .cdr = NIL };
-    Obj* exp = &head;
+    Obj* head = alloc_cons(NIL, NIL); GC_TRACK1(head);
+    Obj* exp = head; GC_TRACK1(exp);
     char c;
 
-   while ((c = peek(stream)) != ')') {
+    while ((c = peek(stream)) != ')') {
        if (c == EOF)
            error("expected closing ')' but got EOF");
-       exp->cdr = alloc_cons(read(stream), NIL);
+       SET_CDR(exp, alloc_cons(read(stream), NIL));
        exp = exp->cdr;
-   }
+    }
 
-   getc(stream); // read closing ')'
-   return head.cdr;
+    getc(stream); // read closing ')'
+    GC_RELEASE(2);
+    return head->cdr;
 }
 
 Obj* readstring(FILE* stream) {

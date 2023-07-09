@@ -10,6 +10,7 @@ typedef enum {
     SPECIAL_FORM,
     BOOLEAN,
     EMPTY_LIST,
+    MOVED_BY_GC,
 } Type;
 
 typedef struct Obj* Env;
@@ -27,13 +28,30 @@ typedef struct Obj {
             struct Obj* car;
             struct Obj* cdr;
         };
+        struct Obj* forwarding_addr;
     };
 } Obj;
 
 /**** error.c ****/
 void error(const char* msg);
 
+/**** constants.c ****/
+#define TRUE &trueobj
+#define FALSE &falseobj
+#define NIL &nilobj
+extern Obj trueobj;
+extern Obj falseobj;
+extern Obj nilobj;
+
 /**** mem.c ****/
+#define GC_TRACK1(v1) gc_track(&v1)
+#define GC_TRACK2(v1, v2) gc_track(&v1), gc_track(&v2)
+#define GC_TRACK3(v1, v2, v3) gc_track(&v1), gc_track(&v2), gc_track(&v3)
+#define GC_RELEASE(n) gc_release(n)
+#define SET_CAR(obj, value) { Obj* tmp = value; obj->car = tmp; }
+#define SET_CDR(obj, value) { Obj* tmp = value; obj->cdr = tmp; }
+void gc_track(Obj** var_ptr);
+void gc_release(size_t nvars);
 Obj* alloc_cons(Obj* car, Obj* cdr);
 Obj* alloc_number(int num);
 Obj* alloc_primitive(Primitive prim);
@@ -63,13 +81,7 @@ typedef Obj* Lambda;
 Lambda make_lambda(Obj* params, Obj* body, Env env);
 Obj* apply(Obj* proc, Obj* args);
 
-/**** constants.c ****/
-#define TRUE &trueobj
-#define FALSE &falseobj
-#define NIL &nilobj
-extern Obj trueobj;
-extern Obj falseobj;
-extern Obj nilobj;
+/**** defs.c ****/
 void setup_env(Env env);
 
 /**** write.c ****/

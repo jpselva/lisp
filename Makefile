@@ -12,7 +12,7 @@ lisp: $(OBJS)
 	gcc $(OBJS) -o lisp
 
 $(OBJ)/%.o: $(SRC)/%.c
-	gcc $(CFLAGS) -c $< -o $@
+	gcc $(CFLAGS) $(EXTRAFLAGS) -c $< -o $@
 
 clean:
 	rm -r $(BIN) $(OBJ)/*
