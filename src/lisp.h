@@ -44,15 +44,16 @@ extern Obj falseobj;
 extern Obj nilobj;
 
 /**** mem.c ****/
-#define GC_TRACK1(v1) gc_track(&v1)
-#define GC_TRACK2(v1, v2) gc_track(&v1), gc_track(&v2)
-#define GC_TRACK3(v1, v2, v3) gc_track(&v1), gc_track(&v2), gc_track(&v3)
-#define GC_RELEASE(n) gc_release(n)
-#define SET_CAR(obj, value) { Obj* tmp = value; obj->car = tmp; }
-#define SET_CDR(obj, value) { Obj* tmp = value; obj->cdr = tmp; }
-void gc_track(Obj** var_ptr);
-void gc_release(size_t nvars);
-Obj* alloc_cons(Obj* car, Obj* cdr);
+#define DEFINE1(var) Obj** var = push(NIL)
+#define DEFINE2(var1, var2) Obj** var1 = push(NIL); Obj** var2 = push(NIL)
+#define DEFINE3(var1, var2, var3) \
+    Obj** var1 = push(NIL); Obj** var2 = push(NIL); Obj** var3 = push(NIL)
+#define FREE(n) pop(n)
+#define SET_CAR(obj, exp) { Obj* tmp = exp; (*obj)->car = tmp; }
+#define SET_CDR(obj, exp) { Obj* tmp = exp; (*obj)->cdr = tmp; }
+Obj** push(Obj* addr);
+void pop(size_t nvars);
+Obj* alloc_cons(Obj** car, Obj** cdr);
 Obj* alloc_number(int num);
 Obj* alloc_primitive(Primitive prim);
 Obj* alloc_string(const char* str);

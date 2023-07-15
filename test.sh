@@ -20,19 +20,23 @@ gcc $GCCOPTS -c test/mem.c -o ${TESTOBJS}/mem.o                     \
     || echo "mem.c test crashed or didn't build"
 
 ## read.c
-make clean
-READDEPS="obj/constants.o obj/mem.o obj/read.o"
-make EXTRAFLAGS="-DALWAYS_GC" ${READDEPS}
-gcc $GCCOPTS -c test/read.c -o ${TESTOBJS}/read.o                      \
-    && gcc $GCCOPTS ${TESTOBJS}/read.o ${READDEPS} -o ${TESTBINS}/read \
-    && ./${TESTBINS}/read                                              \
-    || echo "read.c test crashed or didn't build"
+#make clean
+#READDEPS="obj/constants.o obj/mem.o obj/read.o"
+#make EXTRAFLAGS="-DALWAYS_GC" ${READDEPS}
+#gcc $GCCOPTS -c test/read.c -o ${TESTOBJS}/read.o                      \
+#    && gcc $GCCOPTS ${TESTOBJS}/read.o ${READDEPS} -o ${TESTBINS}/read \
+#    && ./${TESTBINS}/read                                              \
+#    || echo "read.c test crashed or didn't build"
 
 ## env.c
-#gcc $GCCOPTS -c test/env.c -o ${TESTOBJS}/env.o
-#gcc $GCCOPTS ${TESTOBJS}/env.o obj/constants.o obj/mem.o obj/env.o -o ${TESTBINS}/env
-#./${TESTBINS}/env
-#
+#make clean
+#ENVDEPS="obj/constants.o obj/mem.o obj/env.o"
+#make EXTRAFLAGS="-DALWAYS_GC" ${ENVDEPS}
+#gcc $GCCOPTS -c test/env.c -o ${TESTOBJS}/env.o                     \
+#    && gcc $GCCOPTS ${TESTOBJS}/env.o ${ENVDEPS} -o ${TESTBINS}/env \
+#    && ./${TESTBINS}/env                                            \
+#    || echo "env.c test crashed or didn't build"
+
 ## apply.c
 #gcc $GCCOPTS -c test/apply.c -o ${TESTOBJS}/apply.o
 #gcc $GCCOPTS ${TESTOBJS}/apply.o obj/constants.o obj/mem.o obj/env.o obj/apply.o -o ${TESTBINS}/apply

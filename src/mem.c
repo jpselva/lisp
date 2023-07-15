@@ -5,12 +5,44 @@
 #define MEMSZ 1024
 #define STKSZ 256 // < MEMSZ
 
+Obj* stack[STKSZ];
+Obj** stack_ptr = stack;
+
+Obj** push(Obj* value) {
+    *stack_ptr = value;
+    return stack_ptr++;
+}
+
+void pop(size_t nvars) {
+    while((nvars > 0) && (stack_ptr > stack)) {
+        stack_ptr--;
+        nvars--;
+    }
+    if (nvars != 0) { 
+        error("stack underflow"); 
+    }
+}
+
+#define DEFINE1(var) Obj** var = push(NIL)
+#define DEFINE2(var1, var2) Obj** var1 = push(NIL); Obj** var2 = push(NIL)
+#define DEFINE3(var1, var2, var3) \
+    Obj** var1 = push(NIL); Obj** var2 = push(NIL); Obj** var3 = push(NIL)
+#define FREE(n) pop(n)
+
+// Since GC can happen in any call to the allocation functions, the following
+// code might lead to undefined behavior:
+//
+//     (*obj)->car = alloc_string("this might fail");
+//
+// What if `(*obj)->car` is evaluated before the right hand side, but `alloc_string`
+// triggers GC? `(*obj)` now points somewhere else but the target of the assignment
+// will still point to the old memory. Hence these two macros:
+#define SET_CAR(obj, exp) { Obj* tmp = exp; (*obj)->car = tmp; }
+#define SET_CDR(obj, exp) { Obj* tmp = exp; (*obj)->cdr = tmp; }
+
 Obj mem1[MEMSZ], mem2[MEMSZ];
 Obj* mem = mem1; 
 Obj* free_ptr = mem1;
-
-Obj** stack[STKSZ];
-Obj*** stack_ptr = stack;
 
 Obj* gc_move(Obj* old_addr) {
     switch (old_addr->type) {
@@ -32,7 +64,7 @@ void gc() {
     free_ptr = new_mem;
     
     for (int i = 0; i < (stack_ptr - stack); i++) {
-        *stack[i] = gc_move(*stack[i]);
+        stack[i] = gc_move(stack[i]);
     }
 
     for(Obj* scan_ptr = new_mem; scan_ptr < free_ptr; scan_ptr++) {
@@ -46,7 +78,7 @@ void gc() {
     for(Obj* sweep_ptr = mem; sweep_ptr < mem + MEMSZ; sweep_ptr++) {
         if ((sweep_ptr->type == STRING) || (sweep_ptr->type == SYMBOL)) {
             free(sweep_ptr->string);
-            sweep_ptr->type = NUMBER; // or anything that's not STRING or SYMBOL (TODO: improve)
+            sweep_ptr->type = NUMBER; // TODO: is this necessary?
             sweep_ptr->string = NULL;
         }
     }
@@ -56,39 +88,6 @@ void gc() {
     }
     mem = new_mem;
 }
-
-void gc_track(Obj** var_ptr) {
-    if (stack_ptr == stack + STKSZ) {
-        error("stack overflow");
-    }
-    *stack_ptr++ = var_ptr;
-}
-
-void gc_release(size_t nvars) {
-    while((nvars > 0) && (stack_ptr > stack)) {
-        stack_ptr--;
-        nvars--;
-    }
-    if (nvars != 0) { 
-        error("stack underflow"); 
-    }
-}
-
-#define GC_TRACK1(v1) gc_track(&v1)
-#define GC_TRACK2(v1, v2) gc_track(&v1), gc_track(&v2)
-#define GC_TRACK3(v1, v2, v3) gc_track(&v1), gc_track(&v2), gc_track(&v3)
-#define GC_RELEASE(n) gc_release(n) // just to match the GC_TRACK* macros
-
-// Since GC can happen in any call to the allocation functions, the following
-// code might lead to undefined behavior:
-//
-//     obj->car = alloc_string("this might fail");
-//
-// What if `obj->car` is evaluated before the right hand side, but `alloc_string`
-// triggers GC? `obj` now points somewhere else but the target of the assignment
-// will still point to the old memory. Hence these two macros:
-#define SET_CAR(obj, value) { Obj* tmp = value; obj->car = tmp; }
-#define SET_CDR(obj, value) { Obj* tmp = value; obj->cdr = tmp; }
 
 Obj* alloc() {
 #ifndef ALWAYS_GC
@@ -102,15 +101,13 @@ Obj* alloc() {
     return free_ptr++;
 }
 
-Obj* alloc_cons(Obj* car, Obj* cdr) {
-    GC_TRACK2(car, cdr);
+Obj* alloc_cons(Obj** car, Obj** cdr) {
     Obj* new_obj = alloc(); 
 
     new_obj->type = CONS;
-    new_obj->car = car;
-    new_obj->cdr = cdr;
+    new_obj->car = *car;
+    new_obj->cdr = *cdr;
 
-    GC_RELEASE(2);
     return new_obj;
 }
 
