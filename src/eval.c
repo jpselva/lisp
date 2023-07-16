@@ -1,8 +1,8 @@
 #include "lisp.h"
 
-Obj* list_of_values(Obj** exps, Obj** env);
+Obj* list_of_values(Obj* const* exps, Obj* const* env);
 
-Obj* eval(Obj** exp, Obj** env) {
+Obj* eval(Obj* const* exp, Obj* const* env) {
     switch ((*exp)->type) {
         case NUMBER:
         case STRING:
@@ -31,7 +31,7 @@ Obj* eval(Obj** exp, Obj** env) {
     }
 }
 
-Obj* eval_sequence(Obj** exps, Obj** env) {
+Obj* eval_sequence(Obj* const* exps, Obj* const* env) {
     DEF3(value, exp_scan, exp);
 
     *value = NIL;
@@ -47,7 +47,7 @@ Obj* eval_sequence(Obj** exps, Obj** env) {
     return RET(3, *value);
 }
 
-Obj* list_of_values(Obj** exps, Obj** env) {
+Obj* list_of_values(Obj* const* exps, Obj* const* env) {
     DEF4(head, entry, exp_scan, tmp);
     *head = alloc_cons(&NIL, &NIL);
     *entry = *head;

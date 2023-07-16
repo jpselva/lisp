@@ -68,6 +68,17 @@ Obj* gc_move(Obj* old_addr) {
     }
 }
 
+void freemem(Obj* mem) {
+    // Free dangling strings from memory
+    for(Obj* sweep_ptr = mem; sweep_ptr < mem + MEMSZ; sweep_ptr++) {
+        if ((sweep_ptr->type == STRING) || (sweep_ptr->type == SYMBOL)) {
+            free(sweep_ptr->string);
+            sweep_ptr->type = NUMBER; // TODO: is this necessary?
+            sweep_ptr->string = NULL;
+        }
+    }
+}
+
 void gc() {
     Obj* new_mem = (mem == mem1) ? mem2 : mem1;
     free_ptr = new_mem;
@@ -83,19 +94,19 @@ void gc() {
         }
     }
 
-    // Free dangling strings from memory
-    for(Obj* sweep_ptr = mem; sweep_ptr < mem + MEMSZ; sweep_ptr++) {
-        if ((sweep_ptr->type == STRING) || (sweep_ptr->type == SYMBOL)) {
-            free(sweep_ptr->string);
-            sweep_ptr->type = NUMBER; // TODO: is this necessary?
-            sweep_ptr->string = NULL;
-        }
-    }
+    freemem(mem);
 
     if (free_ptr == new_mem + MEMSZ) {
         error("memory is full");
     }
     mem = new_mem;
+}
+
+void cleanup() {
+    freemem(mem);
+    if (stack_ptr != stack) {
+        error("finished execution with unpopped variables in the stack");
+    }
 }
 
 Obj* alloc() {
@@ -110,7 +121,7 @@ Obj* alloc() {
     return free_ptr++;
 }
 
-Obj* alloc_cons(Obj** car, Obj** cdr) {
+Obj* alloc_cons(Obj* const* car, Obj* const* cdr) {
     Obj* new_obj = alloc(); 
 
     new_obj->type = CONS;

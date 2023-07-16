@@ -2,6 +2,7 @@
 
 int main() {
     DEF3(env, exp, value);
+
     *env = extend_environment(&NIL, &NIL, &NIL);
     setup_env(env);
     
@@ -18,5 +19,7 @@ int main() {
     }
 
     RET(3, NIL);
+
+    cleanup();
     return 0;
 }

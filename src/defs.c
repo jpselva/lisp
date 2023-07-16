@@ -1,6 +1,6 @@
 #include "lisp.h"
 
-int length(Obj** args) {
+int length(Obj* const* args) {
     Obj* scan = *args;
     int len;
 
@@ -16,7 +16,7 @@ int length(Obj** args) {
 
 /**** Primitive functions ****/
 
-Obj* car_p(Obj** args) {
+Obj* car_p(Obj* const* args) {
     if (length(args) != 1) {
         error("car takes exactly one argument");
     }
@@ -26,7 +26,7 @@ Obj* car_p(Obj** args) {
     return (*args)->car->car;
 }
 
-Obj* cdr_p(Obj** args) {
+Obj* cdr_p(Obj* const* args) {
     if (length(args) != 1) {
         error("cdr takes only one argument");
     }
@@ -36,7 +36,7 @@ Obj* cdr_p(Obj** args) {
     return (*args)->car->cdr;
 }
 
-Obj* cons_p(Obj** args) {
+Obj* cons_p(Obj* const* args) {
     DEF2(car, cdr);
 
     if (length(args) != 2) {
@@ -48,14 +48,14 @@ Obj* cons_p(Obj** args) {
     return RET(2, alloc_cons(car, cdr));
 }
 
-Obj* eq_p(Obj** args) {
+Obj* eq_p(Obj* const* args) {
     if (length(args) != 2) {
         error("eq? takes exactly two arguments");
     }
     return ((*args)->car == (*args)->cdr->car) ? TRUE : FALSE;
 }
 
-Obj* plus_p(Obj** args) {
+Obj* plus_p(Obj* const* args) {
     int result = 0;
 
     for (Obj* num = *args; num != NIL; num = num->cdr) {
@@ -68,7 +68,7 @@ Obj* plus_p(Obj** args) {
     return alloc_number(result);
 }
 
-Obj* minus_p(Obj** args) {
+Obj* minus_p(Obj* const* args) {
     if (length(args) < 1) {
         error("- expects at least one argument");
     } else if ((*args)->car->type != NUMBER) {
@@ -87,7 +87,7 @@ Obj* minus_p(Obj** args) {
     return alloc_number(result);
 }
 
-Obj* equal_p(Obj** args) {
+Obj* equal_p(Obj* const* args) {
    if (length(args) != 2) {
        error("= takes exactly two arguments");
    }
@@ -98,7 +98,7 @@ Obj* equal_p(Obj** args) {
    return ((*args)->car->number == (*args)->cdr->car->number) ? TRUE : FALSE;
 }
 
-Obj* gt_p(Obj** args) {
+Obj* gt_p(Obj* const* args) {
    if (length(args) != 2) {
        error("> takes exactly two arguments");
    }
@@ -109,7 +109,7 @@ Obj* gt_p(Obj** args) {
    return ((*args)->car->number > (*args)->cdr->car->number) ? TRUE : FALSE;
 }
 
-Obj* lt_p(Obj** args) {
+Obj* lt_p(Obj* const* args) {
    if (length(args) != 2) {
        error("< takes exactly two arguments");
    }
@@ -120,7 +120,7 @@ Obj* lt_p(Obj** args) {
    return ((*args)->car->number < (*args)->cdr->car->number) ? TRUE : FALSE;
 }
 
-Obj* write_p(Obj** args) {
+Obj* write_p(Obj* const* args) {
     DEF1(obj);
 
     if (length(args) != 1) {
@@ -134,14 +134,14 @@ Obj* write_p(Obj** args) {
 
 /**** Special forms ****/
 
-Obj* quote_sf(Obj** exps, Obj** env) {
+Obj* quote_sf(Obj* const* exps, Obj* const* env) {
     if (length(exps) != 1) {
         error("quote expects exactly one expression");
     }
     return (*exps)->car;
 }
 
-Obj* or_sf(Obj** exps, Obj** env) {
+Obj* or_sf(Obj* const* exps, Obj* const* env) {
     DEF2(exp_scan, exp);
 
     Obj* result = FALSE;
@@ -156,7 +156,7 @@ Obj* or_sf(Obj** exps, Obj** env) {
     return RET(2, result);
 }
 
-Obj* if_sf(Obj** exps, Obj** env) {
+Obj* if_sf(Obj* const* exps, Obj* const* env) {
     DEF3(predicate, consequent, alternative);
 
     int exps_length = length(exps);
@@ -178,7 +178,7 @@ Obj* if_sf(Obj** exps, Obj** env) {
     }
 }
 
-Obj* define_sf(Obj** exps, Obj** env) {
+Obj* define_sf(Obj* const* exps, Obj* const* env) {
     DEF2(var, value);
 
     if (length(exps) != 2 || (*exps)->car->type != SYMBOL) {
@@ -193,7 +193,7 @@ Obj* define_sf(Obj** exps, Obj** env) {
     return RET(2, *value);
 }
 
-Obj* set_sf(Obj** exps, Obj** env) {
+Obj* set_sf(Obj* const* exps, Obj* const* env) {
     DEF2(var, value);
 
     if (length(exps) != 2 || (*exps)->car->type != SYMBOL) {
@@ -208,7 +208,7 @@ Obj* set_sf(Obj** exps, Obj** env) {
     return RET(2, *value);
 }
 
-Obj* lambda_sf(Obj** exps, Obj** env) {
+Obj* lambda_sf(Obj* const* exps, Obj* const* env) {
     DEF2(params, body);
 
     if (length(exps) < 2) {
@@ -221,7 +221,7 @@ Obj* lambda_sf(Obj** exps, Obj** env) {
     return RET(2, make_lambda(params, body, env));
 }
 
-Obj* begin_sf(Obj** exps, Obj** env) {
+Obj* begin_sf(Obj* const* exps, Obj* const* env) {
     return eval_sequence(exps, env);
 }
 
@@ -234,7 +234,7 @@ Obj* begin_sf(Obj** exps, Obj** env) {
         RET(2, NIL);                          \
     }
 
-void setup_env(Obj** env) {
+void setup_env(Obj* const* env) {
     DEFVAR("#t", TRUE);
     DEFVAR("#f", FALSE);
 

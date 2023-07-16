@@ -3,7 +3,7 @@
 #define lambda_body(lambda) (lambda)->cdr->car
 #define lambda_env(lambda) (lambda)->cdr->cdr
 
-Obj* make_lambda(Obj** params, Obj** body, Obj** env) {
+Obj* make_lambda(Obj* const* params, Obj* const* body, Obj* const* env) {
     DEF1(tmp);
     *tmp = alloc_cons(body, env);
     *tmp = alloc_cons(params, tmp);
@@ -11,7 +11,7 @@ Obj* make_lambda(Obj** params, Obj** body, Obj** env) {
     return RET(1, *tmp);
 }
 
-Obj* apply(Obj** proc, Obj** args) {
+Obj* apply(Obj* const* proc, Obj* const* args) {
     if ((*proc)->type == LAMBDA) {
         DEF3(params, env, body);
 

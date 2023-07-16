@@ -13,8 +13,8 @@ typedef enum {
     MOVED_BY_GC,
 } Type;
 
-typedef struct Obj* (*Primitive)(struct Obj** args);
-typedef struct Obj* (*SpecialForm)(struct Obj** exps, struct Obj** env);
+typedef struct Obj* (*Primitive)(struct Obj* const* args);
+typedef struct Obj* (*SpecialForm)(struct Obj* const* exps, struct Obj* const* env);
 
 typedef struct Obj {
     Type type; 
@@ -55,7 +55,8 @@ extern Obj* nil_c;
 #define SET_CDR(obj, exp) { Obj* _tmp = (exp); (obj)->cdr = _tmp; }
 Obj** push(Obj* addr);
 Obj* popandreturn(size_t nvars, Obj* value);
-Obj* alloc_cons(Obj** car, Obj** cdr);
+void cleanup();
+Obj* alloc_cons(Obj* const* car, Obj* const* cdr);
 Obj* alloc_number(int num);
 Obj* alloc_primitive(Primitive prim);
 Obj* alloc_string(const char* str);
@@ -67,21 +68,21 @@ char peek(FILE* stream);
 Obj* read(FILE* stream);
 
 /**** env.c ****/
-Obj* extend_environment(Obj** vars, Obj** values, Obj** env);
-void define_variable(Obj** var, Obj** value, Obj** env);
-void set_variable(Obj** var, Obj** value, Obj** env);
-Obj* lookup(Obj** var, Obj** env);
+Obj* extend_environment(Obj* const* vars, Obj* const* values, Obj* const* env);
+void define_variable(Obj* const* var, Obj* const* value, Obj* const* env);
+void set_variable(Obj* const* var, Obj* const* value, Obj* const* env);
+Obj* lookup(Obj* const* var, Obj* const* env);
 
 /**** eval.c ****/
-Obj* eval(Obj** exp, Obj** env);
-Obj* eval_sequence(Obj** exps, Obj** env);
+Obj* eval(Obj* const* exp, Obj* const* env);
+Obj* eval_sequence(Obj* const* exps, Obj* const* env);
 
 /**** apply.c ****/
-Obj* make_lambda(Obj** params, Obj** body, Obj** env);
-Obj* apply(Obj** proc, Obj** args);
+Obj* make_lambda(Obj* const* params, Obj* const* body, Obj* const* env);
+Obj* apply(Obj* const* proc, Obj* const* args);
 
 /**** defs.c ****/
-void setup_env(Obj** env);
+void setup_env(Obj* const* env);
 
 /**** write.c ****/
-void write(Obj** obj);
+void write(Obj* const* obj);

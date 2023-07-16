@@ -1,6 +1,6 @@
 #include "lisp.h"
 
-void write(Obj** obj) {
+void write(Obj* const* obj) {
     switch ((*obj)->type) {
         case CONS: {
             DEF1(tmp);

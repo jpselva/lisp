@@ -6,16 +6,16 @@
 #define FIRST_FRAME(env) ((env)->car)
 #define REST_FRAMES(env) ((env)->cdr)
 
-Obj* make_frame(Obj** vars, Obj** values) {
+Obj* make_frame(Obj* const* vars, Obj* const* values) {
     return alloc_cons(vars, values);
 }
 
-void set_frame(Obj** frame, Obj** vars, Obj** values) {
+void set_frame(Obj* const* frame, Obj* const* vars, Obj* const* values) {
     SET_CAR(*frame, *vars);
     SET_CDR(*frame, *values);
 }
 
-Obj* extend_environment(Obj** vars, Obj** values, Obj** env)  {
+Obj* extend_environment(Obj* const* vars, Obj* const* values, Obj* const* env)  {
     DEF2(frame, new_env);
 
     *frame = make_frame(vars, values);
@@ -24,7 +24,7 @@ Obj* extend_environment(Obj** vars, Obj** values, Obj** env)  {
     return RET(2, *new_env);
 }
 
-void define_variable(Obj** var, Obj** value, Obj** env) {
+void define_variable(Obj* const* var, Obj* const* value, Obj* const* env) {
     DEF3(frame, vars, values);
 
     *frame = FIRST_FRAME(*env);
@@ -43,7 +43,7 @@ void define_variable(Obj** var, Obj** value, Obj** env) {
     RET(3, NIL);
 }
 
-void set_variable(Obj** var, Obj** value, Obj** env) {
+void set_variable(Obj* const* var, Obj* const* value, Obj* const* env) {
     Obj *env_scan, *var_scan, *value_scan; 
 
     for (env_scan = *env; env_scan != NIL; env_scan = REST_FRAMES(env_scan)) {
@@ -62,7 +62,7 @@ void set_variable(Obj** var, Obj** value, Obj** env) {
     error("attempt to set undefined variable");
 }
 
-Obj* lookup(Obj** var, Obj** env) {
+Obj* lookup(Obj* const* var, Obj* const* env) {
     Obj *env_scan, *var_scan, *value_scan; 
 
     for (env_scan = *env; env_scan != NIL; env_scan = REST_FRAMES(env_scan)) {
