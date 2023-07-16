@@ -48,7 +48,7 @@ Obj* cons_p(Obj** args) {
     return RET(2, alloc_cons(car, cdr));
 }
 
-Obj* is_eq_p(Obj** args) {
+Obj* eq_p(Obj** args) {
     if (length(args) != 2) {
         error("eq? takes exactly two arguments");
     }
@@ -60,7 +60,7 @@ Obj* plus_p(Obj** args) {
 
     for (Obj* num = *args; num != NIL; num = num->cdr) {
         if (num->car->type != NUMBER) {
-            error("can't sum something that's not a number");
+            error("+ takes only numbers");
         }
         result += num->car->number;
     }
@@ -68,7 +68,26 @@ Obj* plus_p(Obj** args) {
     return alloc_number(result);
 }
 
-Obj* is_equal_p(Obj** args) {
+Obj* minus_p(Obj** args) {
+    if (length(args) < 1) {
+        error("- expects at least one argument");
+    } else if ((*args)->car->type != NUMBER) {
+        error("- takes only numbers");
+    }
+
+    int result = (*args)->car->number;
+
+    for (Obj* num = (*args)->cdr; num != NIL; num = num->cdr) {
+        if (num->car->type != NUMBER) {
+            error("- takes only numbers");
+        }
+        result -= num->car->number;
+    }
+
+    return alloc_number(result);
+}
+
+Obj* equal_p(Obj** args) {
    if (length(args) != 2) {
        error("= takes exactly two arguments");
    }
@@ -77,6 +96,28 @@ Obj* is_equal_p(Obj** args) {
    }
 
    return ((*args)->car->number == (*args)->cdr->car->number) ? TRUE : FALSE;
+}
+
+Obj* gt_p(Obj** args) {
+   if (length(args) != 2) {
+       error("> takes exactly two arguments");
+   }
+   if (((*args)->car->type != NUMBER) || ((*args)->cdr->car->type != NUMBER)) {
+       error("both arguments to = must be numbers");
+   }
+
+   return ((*args)->car->number > (*args)->cdr->car->number) ? TRUE : FALSE;
+}
+
+Obj* lt_p(Obj** args) {
+   if (length(args) != 2) {
+       error("< takes exactly two arguments");
+   }
+   if (((*args)->car->type != NUMBER) || ((*args)->cdr->car->type != NUMBER)) {
+       error("both arguments to = must be numbers");
+   }
+
+   return ((*args)->car->number < (*args)->cdr->car->number) ? TRUE : FALSE;
 }
 
 Obj* write_p(Obj** args) {
@@ -92,6 +133,28 @@ Obj* write_p(Obj** args) {
 }
 
 /**** Special forms ****/
+
+Obj* quote_sf(Obj** exps, Obj** env) {
+    if (length(exps) != 1) {
+        error("quote expects exactly one expression");
+    }
+    return (*exps)->car;
+}
+
+Obj* or_sf(Obj** exps, Obj** env) {
+    DEF2(exp_scan, exp);
+
+    Obj* result = FALSE;
+
+    for(*exp_scan = *exps; *exp_scan != NIL; *exp_scan = (*exp_scan)->cdr) {
+        *exp = (*exp_scan)->car;
+        if ((result = eval(exp, env)) != FALSE) {
+            break;
+        }
+    }
+
+    return RET(2, result);
+}
 
 Obj* if_sf(Obj** exps, Obj** env) {
     DEF3(predicate, consequent, alternative);
@@ -174,13 +237,20 @@ Obj* begin_sf(Obj** exps, Obj** env) {
 void setup_env(Obj** env) {
     DEFVAR("#t", TRUE);
     DEFVAR("#f", FALSE);
+
     DEFVAR("car", alloc_primitive(car_p));
     DEFVAR("cdr", alloc_primitive(cdr_p));
     DEFVAR("cons", alloc_primitive(cons_p));
-    DEFVAR("eq?", alloc_primitive(is_eq_p));
+    DEFVAR("eq?", alloc_primitive(eq_p));
     DEFVAR("+", alloc_primitive(plus_p));
-    DEFVAR("=", alloc_primitive(is_equal_p));
+    DEFVAR("-", alloc_primitive(minus_p));
+    DEFVAR("=", alloc_primitive(equal_p));
+    DEFVAR(">", alloc_primitive(gt_p));
+    DEFVAR("<", alloc_primitive(lt_p));
     DEFVAR("write", alloc_primitive(write_p));
+
+    DEFVAR("quote", alloc_special_form(quote_sf));
+    DEFVAR("or", alloc_special_form(or_sf));
     DEFVAR("if", alloc_special_form(if_sf));
     DEFVAR("define", alloc_special_form(define_sf));
     DEFVAR("set!", alloc_special_form(set_sf));

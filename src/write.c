@@ -9,7 +9,7 @@ void write(Obj** obj) {
             putchar('(');
             write(tmp);
 
-            putchar('.');
+            printf(" . ");
 
             *tmp = (*obj)->cdr;
             write(tmp);
