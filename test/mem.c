@@ -41,7 +41,7 @@ void test_gc_triggers() {
 }
 
 void test_simple_gc() {
-    DEFINE1(obj); // make obj part of gc root
+    DEF1(obj); // make obj part of gc root
 
     alloc_string("this is garbage");
 
@@ -55,7 +55,7 @@ void test_simple_gc() {
     test("doesn't free stacked addresses", mem[0].type == STRING);
     test("doesn't free stacked addresses", !strcmp(mem[0].string, do_not_gc_str))
 
-    FREE(1);
+    RET(1, NIL);
     gc();
     test("frees memory if it's not in the stack", free_ptr == mem);
 
@@ -64,14 +64,14 @@ void test_simple_gc() {
 
 // garbage collect memory with a pair
 void test_gc_pairs1() {
-    DEFINE1(pair);
+    DEF1(pair);
 
     for (int i = 0; i < 100; i++) alloc_string("garbage");
 
     Obj* dummy = NIL;
     *pair = alloc_cons(&dummy, &dummy);
-    SET_CAR(pair, alloc_string("this is the car"));
-    SET_CDR(pair, alloc_string("this is the cdr"));
+    SET_CAR(*pair, alloc_string("this is the car"));
+    SET_CDR(*pair, alloc_string("this is the cdr"));
     gc();
 
     test("frees unused memory in gc", free_ptr == mem + 3);
@@ -82,20 +82,20 @@ void test_gc_pairs1() {
     test("copies and updates cdr correctly", 
             ((*pair)->cdr->type == STRING) && !strcmp((*pair)->cdr->string, "this is the cdr"));
 
-    FREE(1);
+    RET(1, NIL);
     gc();
 }
 
 // trigger gc right when an assignment to a pair's car happens
 void test_gc_pairs2() {
-    DEFINE1(pair);
+    DEF1(pair);
     // leave only a single memory cell free
     for (int i = 0; i < MEMSZ - 1; i++) alloc_string("garbage");
 
     Obj* dummy = NIL;
     *pair = alloc_cons(&dummy, &dummy);
-    SET_CAR(pair, alloc_string("this is the car")); // gc happens here
-    SET_CDR(pair, alloc_string("this is the cdr"));
+    SET_CAR(*pair, alloc_string("this is the car")); // gc happens here
+    SET_CDR(*pair, alloc_string("this is the cdr"));
 
     test("frees unused memory in gc", free_ptr == mem + 3); 
     test("updates stack variables when they are moved", *pair == mem);
@@ -105,13 +105,13 @@ void test_gc_pairs2() {
     test("copies and updates cdr correctly", 
             ((*pair)->cdr->type == STRING) && !strcmp((*pair)->cdr->string, "this is the cdr"));
 
-    FREE(1);
+    RET(1, NIL);
     gc();
 }
 
 // trigger gc during alloc_cons
 void test_gc_pairs3() {
-    DEFINE3(car, cdr, pair);
+    DEF3(car, cdr, pair);
 
     // leave only 2 cells free
     for (int i = 0; i < MEMSZ - 2; i++) alloc_string("garbage");
@@ -130,26 +130,26 @@ void test_gc_pairs3() {
     test("copies and updates cdr correctly", 
             ((*pair)->cdr->type == STRING) && !strcmp((*pair)->cdr->string, "this is the cdr"));
 
-    FREE(3);
+    RET(3, NIL);
     gc();
 }
 
 void test_gc_nil_and_booleans() {
-    DEFINE2(nil, fals);
+    DEF2(nil, fals);
     *nil = NIL;
     *fals = FALSE;
     gc();
     test("doesn't collect nils or booleans", free_ptr = mem);
-    FREE(2);
+    RET(2, NIL);
 }
 
 void test_gc_cyclic() {
-    DEFINE1(pair);
+    DEF1(pair);
     for (int i = 0; i < 200; i++) alloc_string("garbage");
 
     Obj* dummy = NIL;
     *pair = alloc_cons(&dummy, &dummy);
-    SET_CAR(pair, alloc_cons(pair, &dummy));
+    SET_CAR(*pair, alloc_cons(pair, &dummy));
     gc();
 
     test("frees unused memory in gc", free_ptr == mem + 2);
@@ -157,7 +157,7 @@ void test_gc_cyclic() {
     test("copies variables correctly", (*pair)->type == CONS);
     test("copies and updates car correctly", 
             ((*pair)->car->type == CONS) && ((*pair)->car->car == (*pair)));
-    FREE(1);
+    RET(1, NIL);
     gc();
     test("frees cyclic reference", free_ptr == mem);
 }

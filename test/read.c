@@ -39,6 +39,8 @@ int main() {
 
     Obj* end = exp->cdr->cdr->cdr->cdr;
     test("ends list with NIL", end == NIL);
+    
+    fclose(stream);
 
     /**** test 2 ****/
     char* mock_input2 = "()";
@@ -47,12 +49,16 @@ int main() {
     exp = read(stream2);
     test("empty list", exp == NIL);
 
+    fclose(stream2);
+
     /**** test 3 ****/
     char* mock_input3 = "(())";
     FILE* stream3 = fmemopen(mock_input3, strlen(mock_input3), "r");
 
     exp = read(stream3);
     test("empty list inside list", exp->car == NIL);
+
+    fclose(stream3);
 
     return 0;
 }

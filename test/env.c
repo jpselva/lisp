@@ -6,51 +6,65 @@
 
 int main() {
     testsuite("env.c");
+    DEF4(var, value, env, old_env);
 
     /**** 1st part - one frame ****/
-    Obj* vars1 = C(SYM("x"), C(SYM("y"), C(SYM("z"), NIL)));
-    Obj* values1 = C(NUM(1), C(NUM(2), C(NUM(3), NIL)));
+    *env = extend_environment(&NIL, &NIL, &NIL);
+    char* symbols[] = {"z", "y", "x"};
+    int numbers[] = {3, 2, 1};
+    for (int i = 0; i < 3; i++) {
+        *var = alloc_symbol(symbols[i]);
+        *value = alloc_number(numbers[i]);
+        define_variable(var, value, env);
+    }
 
-    Env env = extend_environment(vars1, values1, NIL);
-
-    Obj* lookup_val = lookup(SYM("y"), env);
+    *var = SYM("y"); 
+    Obj* lookup_val = lookup(var, env);
     test("variable lookup single frame", lookup_val->type == NUMBER);
     test("variable lookup single frame", lookup_val->number == 2);
 
-    set_variable(SYM("z"), NUM(10), env);
-    test("variable set single frame", lookup(SYM("z"), env)->number == 10);
+    *var = SYM("z"); *value = NUM(10);
+    set_variable(var, value, env);
+    test("variable set single frame", lookup(var, env)->number == 10);
 
-    define_variable(SYM("a"), NUM(42), env);
-    Obj* frame = env->car;
+    *var = SYM("a"); *value = NUM(42);
+    define_variable(var, value, env);
+    Obj* frame = (*env)->car;
     test("variable def single frame", frame->car->car == SYM("a"));
     test("variable def single frame", frame->cdr->car->type == NUMBER);
     test("variable def single frame", frame->cdr->car->number == 42);
 
     /**** 2nd part - two frames ****/
-    Obj* vars2 = C(SYM("y"), NIL);
-    Obj* vals2 = C(NUM(300), NIL);
-    env = extend_environment(vars2, vals2, env);
+    *env = extend_environment(&NIL, &NIL, env);
+    *var = SYM("y"); *value = NUM(300);
+    define_variable(var, value, env);
 
-    lookup_val = lookup(SYM("x"), env);
+    *var = SYM("x");
+    lookup_val = lookup(var, env);
     test("lookup transverses frames if needed", lookup_val->type == NUMBER);
     test("lookup transverses frames if needed", lookup_val->number == 1);
 
-    set_variable(SYM("x"), NUM(34), env);
-    lookup_val = lookup(SYM("x"), env->cdr);
+    *var = SYM("x"); *value = NUM(34);
+    set_variable(var, value, env);
+    lookup_val = lookup(var, env);
     test("set transverses frames if needed", lookup_val->number == 34);
 
-    lookup_val = lookup(SYM("y"), env);
+    *var = SYM("y");
+    lookup_val = lookup(var, env);
     test("vars in earlier frames shadow those in later frames", lookup_val->type == NUMBER);
     test("vars in earlier frames shadow those in later frames", lookup_val->number == 300);
 
-    set_variable(SYM("y"), NUM(200), env);
-    Obj* shadowed_y = lookup(SYM("y"), env->cdr); 
-    Obj* actual_y = lookup(SYM("y"), env);
+    *old_env = (*env)->cdr;
+    *var = SYM("y"); *value = NUM(200);
+    set_variable(var, value, env);
+    Obj* shadowed_y = lookup(var, old_env);
+    Obj* actual_y = lookup(var, env);
     test("set should't alter shadowed variables", shadowed_y->number == 2);
     test("set altered variable's earliest occurrence in a frame", actual_y->number == 200);
 
-    define_variable(SYM("x"), NUM(77), env); 
-    frame = env->car;
+    *var = SYM("x"); *value = NUM(77);
+    define_variable(var, value, env); 
+    frame = (*env)->car;
     test("definition always inserts in 1st frame", frame->car->car == SYM("x"));
     test("definition always inserts in 1st frame", frame->cdr->car->type == NUMBER);
     test("definition always inserts in 1st frame", frame->cdr->car->number == 77);

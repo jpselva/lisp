@@ -1,50 +1,58 @@
 #include <string.h>
 #include "lisp.h"
 
-#define frame_vars(frame) frame->car
-#define frame_values(frame) frame->cdr
-#define set_frame(frame, vars, values) \
-    (frame->car = vars, frame->cdr = values)
+#define FRAME_VARS(frame) ((frame)->car)
+#define FRAME_VALUES(frame) ((frame)->cdr)
+#define FIRST_FRAME(env) ((env)->car)
+#define REST_FRAMES(env) ((env)->cdr)
 
-#define first_frame(env) env->car
-#define rest_frames(env) env->cdr
-
-Obj* make_frame(Obj* vars, Obj* values) {
+Obj* make_frame(Obj** vars, Obj** values) {
     return alloc_cons(vars, values);
 }
 
-Obj* extend_environment(Obj* vars, Obj* values, Env env)  {
-    Obj* frame = make_frame(vars, values);
-    Env new_env = alloc_cons(frame, env);
-    return new_env;
+void set_frame(Obj** frame, Obj** vars, Obj** values) {
+    SET_CAR(*frame, *vars);
+    SET_CDR(*frame, *values);
 }
 
-void define_variable(Obj* var, Obj* value, Env env) {
-    Obj* frame = first_frame(env);
-    Obj* var_scan = frame_vars(frame);
+Obj* extend_environment(Obj** vars, Obj** values, Obj** env)  {
+    DEF2(frame, new_env);
 
-    while (var_scan != NIL) {
-        if (var_scan->car == var)
+    *frame = make_frame(vars, values);
+    *new_env = alloc_cons(frame, env);
+
+    return RET(2, *new_env);
+}
+
+void define_variable(Obj** var, Obj** value, Obj** env) {
+    DEF3(frame, vars, values);
+
+    *frame = FIRST_FRAME(*env);
+    *vars = FRAME_VARS(*frame); 
+    *values = FRAME_VALUES(*frame);
+
+    for (Obj* var_scan = *vars; var_scan != NIL; var_scan = var_scan->cdr) {
+        if (var_scan->car == *var)
             error("redefinition of variable");
-        var_scan = var_scan->cdr;
     }
 
-    Obj* new_vars = alloc_cons(var, frame_vars(frame)); 
-    Obj* new_values = alloc_cons(value, frame_values(frame));
-    set_frame(frame, new_vars, new_values);
+    *vars = alloc_cons(var, vars);
+    *values = alloc_cons(value, values);
+    set_frame(frame, vars, values);
+
+    RET(3, NIL);
 }
 
-void set_variable(Obj* var, Obj* value, Env env) {
-    Obj* frame, *var_scan, *value_scan; 
+void set_variable(Obj** var, Obj** value, Obj** env) {
+    Obj *env_scan, *var_scan, *value_scan; 
 
-    for (; env != NIL; env = rest_frames(env)) {
-        frame = first_frame(env);
-        var_scan = frame_vars(frame);
-        value_scan = frame_values(frame);
+    for (env_scan = *env; env_scan != NIL; env_scan = REST_FRAMES(env_scan)) {
+        var_scan = FRAME_VARS(FIRST_FRAME(env_scan));
+        value_scan = FRAME_VALUES(FIRST_FRAME(env_scan));
 
-        while (var_scan != NIL) {
-            if (var_scan->car == var) {
-                value_scan->car = value;
+        while ((var_scan != NIL) && (value_scan != NIL)) {
+            if (var_scan->car == *var) {
+                value_scan->car = *value;
                 return;
             }
             var_scan = var_scan->cdr;
@@ -54,21 +62,21 @@ void set_variable(Obj* var, Obj* value, Env env) {
     error("attempt to set undefined variable");
 }
 
-Obj* lookup(Obj* var, Env env) {
-    Obj* frame, *var_scan, *value_scan; 
+Obj* lookup(Obj** var, Obj** env) {
+    Obj *env_scan, *var_scan, *value_scan; 
 
-    for (; env != NIL; env = rest_frames(env)) {
-        frame = first_frame(env);
-        var_scan = frame_vars(frame);
-        value_scan = frame_values(frame);
+    for (env_scan = *env; env_scan != NIL; env_scan = REST_FRAMES(env_scan)) {
+        var_scan = FRAME_VARS(FIRST_FRAME(env_scan));
+        value_scan = FRAME_VALUES(FIRST_FRAME(env_scan));
 
-        while (var_scan != NIL) {
-            if (var_scan->car == var)
+        while ((var_scan != NIL) && (value_scan != NIL)) {
+            if (var_scan->car == *var) {
                 return value_scan->car;
+            }
             var_scan = var_scan->cdr;
             value_scan = value_scan->cdr;
         }
     }
-    error("variable not found");
+    error("undefined variable");
 }
 

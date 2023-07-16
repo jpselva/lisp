@@ -1,24 +1,32 @@
 #include "lisp.h"
-#define lambda_params(lambda) lambda->car
-#define lambda_body(lambda) lambda->cdr->car
-#define lambda_env(lambda) lambda->cdr->cdr
+#define lambda_params(lambda) (lambda)->car
+#define lambda_body(lambda) (lambda)->cdr->car
+#define lambda_env(lambda) (lambda)->cdr->cdr
 
-typedef Obj* Lambda;
-
-Lambda make_lambda(Obj* params, Obj* body, Env env) {
-    Lambda proc = alloc_cons(params, alloc_cons(body, env));
-    proc->type = LAMBDA;
-    return proc;
+Obj* make_lambda(Obj** params, Obj** body, Obj** env) {
+    DEF1(tmp);
+    *tmp = alloc_cons(body, env);
+    *tmp = alloc_cons(params, tmp);
+    (*tmp)->type = LAMBDA;
+    return RET(1, *tmp);
 }
 
-Obj* apply(Obj* proc, Obj* args) {
-    if (proc->type == LAMBDA) {
-        Env env = extend_environment(lambda_params(proc), args, lambda_env(proc));
-        Obj* result = eval_sequence(lambda_body(proc), env);
-        return  result;
-    } else if (proc->type == PRIMITIVE) {
-        return proc->primitive(args);
-    } else
+Obj* apply(Obj** proc, Obj** args) {
+    if ((*proc)->type == LAMBDA) {
+        DEF3(params, env, body);
+
+        *params = lambda_params(*proc);
+        *env = lambda_env(*proc);
+        *body  = lambda_body(*proc);
+
+        *env = extend_environment(params, args, env);
+        Obj* result = eval_sequence(body, env);
+
+        return RET(3, result);
+    } else if ((*proc)->type == PRIMITIVE) {
+        return (*proc)->primitive(args);
+    } else {
         error("cannot apply object of that type");
+    }
 }
 

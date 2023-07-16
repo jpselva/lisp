@@ -2,13 +2,17 @@
 #include <string.h>
 #include <stdarg.h>
 #include "lisp.h"
-#define MEMSZ 1024
-#define STKSZ 256 // < MEMSZ
+#define MEMSZ 65536
+#define STKSZ 16383
 
 Obj* stack[STKSZ];
 Obj** stack_ptr = stack;
 
 Obj** push(Obj* value) {
+    if (stack_ptr >=  stack + STKSZ) {
+        error("stack overflow");
+    }
+
     *stack_ptr = value;
     return stack_ptr++;
 }
@@ -23,11 +27,16 @@ void pop(size_t nvars) {
     }
 }
 
-#define DEFINE1(var) Obj** var = push(NIL)
-#define DEFINE2(var1, var2) Obj** var1 = push(NIL); Obj** var2 = push(NIL)
-#define DEFINE3(var1, var2, var3) \
+Obj* popandreturn(size_t nvars, Obj* value) {
+    pop(nvars);
+    return value;
+}
+
+#define DEF1(var) Obj** var = push(NIL)
+#define DEF2(var1, var2) Obj** var1 = push(NIL); Obj** var2 = push(NIL)
+#define DEF3(var1, var2, var3) \
     Obj** var1 = push(NIL); Obj** var2 = push(NIL); Obj** var3 = push(NIL)
-#define FREE(n) pop(n)
+#define RET(n, exp) popandreturn(n, exp)
 
 // Since GC can happen in any call to the allocation functions, the following
 // code might lead to undefined behavior:
@@ -37,8 +46,8 @@ void pop(size_t nvars) {
 // What if `(*obj)->car` is evaluated before the right hand side, but `alloc_string`
 // triggers GC? `(*obj)` now points somewhere else but the target of the assignment
 // will still point to the old memory. Hence these two macros:
-#define SET_CAR(obj, exp) { Obj* tmp = exp; (*obj)->car = tmp; }
-#define SET_CDR(obj, exp) { Obj* tmp = exp; (*obj)->cdr = tmp; }
+#define SET_CAR(obj, exp) { Obj* _tmp = (exp); (obj)->car = _tmp; }
+#define SET_CDR(obj, exp) { Obj* _tmp = (exp); (obj)->cdr = _tmp; }
 
 Obj mem1[MEMSZ], mem2[MEMSZ];
 Obj* mem = mem1; 

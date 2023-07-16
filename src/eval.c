@@ -1,59 +1,66 @@
 #include "lisp.h"
 
-Obj* list_of_values(Obj* exps, Env env);
+Obj* list_of_values(Obj** exps, Obj** env);
 
-Obj* eval(Obj* exp, Env env) {
-    Obj* operator, *operands;
-
-    switch (exp->type) {
+Obj* eval(Obj** exp, Obj** env) {
+    switch ((*exp)->type) {
         case NUMBER:
         case STRING:
         case EMPTY_LIST:
-            return exp;
+            return *exp;
             break;
         case SYMBOL:
             return lookup(exp, env);
             break;
-        case CONS:
-            operator = eval(exp->car, env);
-            if (operator->type == SPECIAL_FORM) {
-                return operator->special_form(exp->cdr, env);
+        case CONS: {
+            DEF2(operator, operands);
+
+            *operator = (*exp)->car;
+            *operator = eval(operator, env);
+            *operands = (*exp)->cdr;
+
+            if ((*operator)->type == SPECIAL_FORM) {
+                return RET(2, (*operator)->special_form(operands, env));
             } else {
-                operands = list_of_values(exp->cdr, env);
-                return apply(operator, operands);
+                *operands = list_of_values(operands, env);
+                return RET(2, apply(operator, operands));
             }
-            break;
+        }
         default:
             error("exp of that type can't be evaluated");
     }
 }
 
-Obj* eval_sequence(Obj* exps, Env env) {
-    Obj* value = NIL;
+Obj* eval_sequence(Obj** exps, Obj** env) {
+    DEF3(value, exp_scan, exp);
 
-    while (exps != NIL) {
-        if (exps->type != CONS) {
+    *value = NIL;
+
+    for (*exp_scan = *exps; *exp_scan != NIL; *exp_scan = (*exp_scan)->cdr) {
+        if ((*exp_scan)->type != CONS) {
             error("eval_sequence expects a list of expressions");
         }
-        value = eval(exps->car, env);
-        exps = exps->cdr;
+        *exp = (*exp_scan)->car;
+        *value = eval(exp, env);
     }
 
-    return value;
+    return RET(3, *value);
 }
 
-Obj* list_of_values(Obj* exps, Env env) {
-    Obj head = { .cdr = NIL };
-    Obj* entry = &head;
+Obj* list_of_values(Obj** exps, Obj** env) {
+    DEF4(head, entry, exp_scan, tmp);
+    *head = alloc_cons(&NIL, &NIL);
+    *entry = *head;
 
-    while (exps != NIL) {
-        if (exps->type != CONS) {
+    for (*exp_scan = *exps; *exp_scan != NIL; *exp_scan = (*exp_scan)->cdr) {
+        if ((*exp_scan)->type != CONS) {
             error("list_of_values expects a list of expressions");
         }
-        entry->cdr = alloc_cons(eval(exps->car, env), NIL);
-        entry = entry->cdr;
-        exps = exps->cdr;
+        *tmp = (*exp_scan)->car;
+        *tmp = eval(tmp, env);
+        SET_CDR(*entry, alloc_cons(tmp, &NIL));
+        *entry = (*entry)->cdr;
     }
 
-    return head.cdr; 
+    return RET(4, (*head)->cdr);
 }

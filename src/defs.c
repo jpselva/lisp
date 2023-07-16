@@ -1,135 +1,190 @@
 #include "lisp.h"
 
-/**** Primitive functions ****/
-
-int length(Obj* args) {
+int length(Obj** args) {
+    Obj* scan = *args;
     int len;
-    for (len = 0; args != NIL; args = args->cdr) {
-        if (args->type != CONS) {
+
+    for (len = 0; scan != NIL; scan = scan->cdr) {
+        if (scan->type != CONS) {
             return -1; // not a list
         }
         len++;
     }
+
     return len;
 }
 
-Obj* car(Obj* args) {
+/**** Primitive functions ****/
+
+Obj* car_p(Obj** args) {
     if (length(args) != 1) {
         error("car takes exactly one argument");
     }
-    if (args->car->type != CONS) {
+    if ((*args)->car->type != CONS) {
         error("can't take car of non-cons object");
     }
-    return args->car->car;
+    return (*args)->car->car;
 }
 
-Obj* cdr(Obj* args) {
+Obj* cdr_p(Obj** args) {
     if (length(args) != 1) {
         error("cdr takes only one argument");
     }
-    if (args->car->type != CONS) {
+    if ((*args)->car->type != CONS) {
         error("can't take cdr of non-cons object");
     }
-    return args->car->cdr;
+    return (*args)->car->cdr;
 }
 
-Obj* cons(Obj* args) {
+Obj* cons_p(Obj** args) {
+    DEF2(car, cdr);
+
     if (length(args) != 2) {
         error("cons takes exactly two arguments");
     }
-    return alloc_cons(args->car, args->cdr->car);
+    *car = (*args)->car;
+    *cdr = (*args)->cdr->car;
+
+    return RET(2, alloc_cons(car, cdr));
 }
 
-Obj* is_eq(Obj* args) {
+Obj* is_eq_p(Obj** args) {
     if (length(args) != 2) {
         error("eq? takes exactly two arguments");
     }
-    return (args->car == args->cdr->car) ? TRUE : FALSE;
+    return ((*args)->car == (*args)->cdr->car) ? TRUE : FALSE;
 }
 
-Obj* plus(Obj* args) {
+Obj* plus_p(Obj** args) {
     int result = 0;
 
-    while (args != NIL) {
-        if (args->car->type != NUMBER) {
+    for (Obj* num = *args; num != NIL; num = num->cdr) {
+        if (num->car->type != NUMBER) {
             error("can't sum something that's not a number");
         }
-        result += args->car->number;
-        args = args->cdr;
+        result += num->car->number;
     }
 
     return alloc_number(result);
 }
 
-Obj* is_equal(Obj* args) {
+Obj* is_equal_p(Obj** args) {
    if (length(args) != 2) {
        error("= takes exactly two arguments");
    }
-   if ((args->car->type != NUMBER) || (args->cdr->car->type != NUMBER)) {
+   if (((*args)->car->type != NUMBER) || ((*args)->cdr->car->type != NUMBER)) {
        error("both arguments to = must be numbers");
    }
 
-   return (args->car->number == args->cdr->car->number) ? TRUE : FALSE;
+   return ((*args)->car->number == (*args)->cdr->car->number) ? TRUE : FALSE;
+}
+
+Obj* write_p(Obj** args) {
+    DEF1(obj);
+
+    if (length(args) != 1) {
+        error("write takes 1 argument");
+    }
+
+    *obj = (*args)->car;
+    write(obj);
+    return RET(1, NIL);
 }
 
 /**** Special forms ****/
 
-Obj* eval_if(Obj* exps, Env env) {
+Obj* if_sf(Obj** exps, Obj** env) {
+    DEF3(predicate, consequent, alternative);
+
     int exps_length = length(exps);
+
     if ((exps_length != 2) && (exps_length != 3)) {
         error("if expects 2 or 3 expressions");
     }
-    if (eval(exps->car, env) != FALSE) {
-        return eval(exps->cdr->car, env);
+
+    *predicate = (*exps)->car;
+    *consequent = (*exps)->cdr->car;
+    *alternative = (*exps)->cdr->cdr->car;
+
+    if (eval(predicate, env) != FALSE) {
+        return RET(3, eval(consequent, env));
     } else if (exps_length == 3) {
-        return eval(exps->cdr->cdr->car, env);
+        return RET(3, eval(alternative, env));
     } else {
-        return TRUE;
+        return RET(3, TRUE);
     }
 }
 
-Obj* eval_define(Obj* exps, Env env) {
-    if (length(exps) != 2 || exps->car->type != SYMBOL) {
+Obj* define_sf(Obj** exps, Obj** env) {
+    DEF2(var, value);
+
+    if (length(exps) != 2 || (*exps)->car->type != SYMBOL) {
         error("invalid define syntax");
     }
-    Obj* variable_value = eval(exps->cdr->car, env);
-    define_variable(exps->car, variable_value, env);
-    return variable_value;
+
+    *var = (*exps)->car;
+    *value = (*exps)->cdr->car;
+    *value = eval(value, env);
+    define_variable(var, value, env);
+
+    return RET(2, *value);
 }
 
-Obj* eval_set(Obj* exps, Env env) {
-    if (length(exps) != 2 || exps->car->type != SYMBOL) {
+Obj* set_sf(Obj** exps, Obj** env) {
+    DEF2(var, value);
+
+    if (length(exps) != 2 || (*exps)->car->type != SYMBOL) {
         error("invalid set! syntax");
     }
-    Obj* variable_value = eval(exps->cdr->car, env);
-    set_variable(exps->car, variable_value, env);
-    return variable_value;
+
+    *var = (*exps)->car;
+    *value = (*exps)->cdr->car;
+    *value = eval(value, env);
+    set_variable(var, value, env);
+
+    return RET(2, *value);
 }
 
-Obj* eval_lambda(Obj* exps, Env env) {
-    if (length(exps) < 2 || exps->cdr->car->type != CONS) {
+Obj* lambda_sf(Obj** exps, Obj** env) {
+    DEF2(params, body);
+
+    if (length(exps) < 2) {
         error("invalid lambda syntax");
     }
-    return make_lambda(exps->car, exps->cdr, env);
+
+    *params = (*exps)->car;
+    *body = (*exps)->cdr;
+
+    return RET(2, make_lambda(params, body, env));
 }
 
-Obj* eval_begin(Obj* exps, Env env) {
+Obj* begin_sf(Obj** exps, Obj** env) {
     return eval_sequence(exps, env);
 }
 
-void setup_env(Env env) {
-    define_variable(alloc_symbol("#t"), TRUE, env);
-    define_variable(alloc_symbol("#f"), FALSE, env);
-    define_variable(alloc_symbol("car"), alloc_primitive(car), env);
-    define_variable(alloc_symbol("cdr"), alloc_primitive(cdr), env);
-    define_variable(alloc_symbol("cons"), alloc_primitive(cons), env);
-    define_variable(alloc_symbol("eq?"), alloc_primitive(is_eq), env);
-    define_variable(alloc_symbol("+"), alloc_primitive(plus), env);
-    define_variable(alloc_symbol("="), alloc_primitive(is_equal), env);
-    define_variable(alloc_symbol("if"), alloc_special_form(eval_if), env);
-    define_variable(alloc_symbol("define"), alloc_special_form(eval_define), env);
-    define_variable(alloc_symbol("set!"), alloc_special_form(eval_set), env);
-    define_variable(alloc_symbol("lambda"), alloc_special_form(eval_lambda), env);
-    define_variable(alloc_symbol("begin"), alloc_special_form(eval_begin), env);
+#define DEFVAR(var, value)                    \
+    {                                         \
+        DEF2(_symbol, _obj);                  \
+        *_symbol = alloc_symbol((var));       \
+        *_obj = (value);                      \
+        define_variable(_symbol, _obj, env);  \
+        RET(2, NIL);                          \
+    }
+
+void setup_env(Obj** env) {
+    DEFVAR("#t", TRUE);
+    DEFVAR("#f", FALSE);
+    DEFVAR("car", alloc_primitive(car_p));
+    DEFVAR("cdr", alloc_primitive(cdr_p));
+    DEFVAR("cons", alloc_primitive(cons_p));
+    DEFVAR("eq?", alloc_primitive(is_eq_p));
+    DEFVAR("+", alloc_primitive(plus_p));
+    DEFVAR("=", alloc_primitive(is_equal_p));
+    DEFVAR("write", alloc_primitive(write_p));
+    DEFVAR("if", alloc_special_form(if_sf));
+    DEFVAR("define", alloc_special_form(define_sf));
+    DEFVAR("set!", alloc_special_form(set_sf));
+    DEFVAR("lambda", alloc_special_form(lambda_sf));
+    DEFVAR("begin", alloc_special_form(begin_sf));
 }
 

@@ -1,25 +1,33 @@
 #include "lisp.h"
 
-void write(Obj* obj) {
-    switch (obj->type) {
-        case CONS:
+void write(Obj** obj) {
+    switch ((*obj)->type) {
+        case CONS: {
+            DEF1(tmp);
+
+            *tmp = (*obj)->car;
             putchar('(');
-            write(obj->car);
+            write(tmp);
+
             putchar('.');
-            write(obj->cdr);
+
+            *tmp = (*obj)->cdr;
+            write(tmp);
             putchar(')');
+
+            RET(1, NIL);
             break;
-        case NUMBER:
-            printf("%d", obj->number);
+       } case NUMBER:
+            printf("%d", (*obj)->number);
             break;
         case PRIMITIVE:
-            printf("primitive %p", obj->primitive);
+            printf("primitive %p", (*obj)->primitive);
             break;
         case STRING:
-            printf("\"%s\"", obj->string);
+            printf("\"%s\"", (*obj)->string);
             break;
         case SYMBOL:
-            printf("%s", obj->string);
+            printf("%s", (*obj)->string);
             break;
         case LAMBDA:
             printf("compound procedure");
@@ -28,7 +36,7 @@ void write(Obj* obj) {
             printf("special form");
             break;
         case BOOLEAN:
-            (obj == TRUE) ? printf("#t") : printf("#f");
+            (*obj == TRUE) ? printf("#t") : printf("#f");
             break;
         case EMPTY_LIST:
             printf("()");
