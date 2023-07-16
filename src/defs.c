@@ -147,8 +147,43 @@ Obj* or_sf(Obj* const* exps, Obj* const* env) {
     Obj* result = FALSE;
 
     for(*exp_scan = *exps; *exp_scan != NIL; *exp_scan = (*exp_scan)->cdr) {
+        if ((*exp_scan)->type != CONS) {
+            error("incorrect 'or' syntax");
+        }
+
         *exp = (*exp_scan)->car;
+
+        if ((*exp_scan)->cdr == NIL) {
+            result = make_tail_call(exp, env);
+            break;
+        }
+
         if ((result = eval(exp, env)) != FALSE) {
+            break;
+        }
+    }
+
+    return RET(2, result);
+}
+
+Obj* and_sf(Obj* const* exps, Obj* const* env) {
+    DEF2(exp_scan, exp);
+
+    Obj* result = TRUE;
+
+    for(*exp_scan = *exps; *exp_scan != NIL; *exp_scan = (*exp_scan)->cdr) {
+        if ((*exp_scan)->type != CONS) {
+            error("incorrect 'and' syntax");
+        }
+
+        *exp = (*exp_scan)->car;
+
+        if ((*exp_scan)->cdr == NIL) {
+            result = make_tail_call(exp, env);
+            break;
+        }
+
+        if ((result = eval(exp, env)) == FALSE) {
             break;
         }
     }
@@ -170,9 +205,9 @@ Obj* if_sf(Obj* const* exps, Obj* const* env) {
     *alternative = (*exps)->cdr->cdr->car;
 
     if (eval(predicate, env) != FALSE) {
-        return RET(3, eval(consequent, env));
+        return RET(3, make_tail_call(consequent, env));
     } else if (exps_length == 3) {
-        return RET(3, eval(alternative, env));
+        return RET(3, make_tail_call(alternative, env));
     } else {
         return RET(3, TRUE);
     }
@@ -251,6 +286,7 @@ void setup_env(Obj* const* env) {
 
     DEFVAR("quote", alloc_special_form(quote_sf));
     DEFVAR("or", alloc_special_form(or_sf));
+    DEFVAR("and", alloc_special_form(and_sf));
     DEFVAR("if", alloc_special_form(if_sf));
     DEFVAR("define", alloc_special_form(define_sf));
     DEFVAR("set!", alloc_special_form(set_sf));

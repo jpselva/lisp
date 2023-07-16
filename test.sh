@@ -86,6 +86,14 @@ test or "(or (> 2 3) (= 42 0) 5)" 5
 
 test or "(or (> 2 3) (= 42 0))" "#f"
 
+test or "(or)" "#f"
+
+test and "(and (> 2 3) (+ 4 5))" "#f"
+
+test and "(and (< 2 3) (+ 4 5))" 9
+
+test and "(and)" "#t"
+
 FIBOPROG="
 (begin
     (define fibo

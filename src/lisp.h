@@ -11,6 +11,7 @@ typedef enum {
     BOOLEAN,
     EMPTY_LIST,
     MOVED_BY_GC,
+    TAIL_CALL,
 } Type;
 
 typedef struct Obj* (*Primitive)(struct Obj* const* args);
@@ -76,6 +77,7 @@ Obj* lookup(Obj* const* var, Obj* const* env);
 /**** eval.c ****/
 Obj* eval(Obj* const* exp, Obj* const* env);
 Obj* eval_sequence(Obj* const* exps, Obj* const* env);
+Obj* make_tail_call(Obj* const* exp, Obj* const* env);
 
 /**** apply.c ****/
 Obj* make_lambda(Obj* const* params, Obj* const* body, Obj* const* env);
