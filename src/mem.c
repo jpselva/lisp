@@ -73,8 +73,10 @@ void freemem(Obj* mem) {
     for(Obj* sweep_ptr = mem; sweep_ptr < mem + MEMSZ; sweep_ptr++) {
         if ((sweep_ptr->type == STRING) || (sweep_ptr->type == SYMBOL)) {
             free(sweep_ptr->string);
-            sweep_ptr->type = NUMBER; // TODO: is this necessary?
             sweep_ptr->string = NULL;
+
+            // Just making extra sure no one will try to free the NULL string later
+            sweep_ptr->type = NUMBER;
         }
     }
 }

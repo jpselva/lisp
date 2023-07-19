@@ -119,3 +119,30 @@ MAPPROG="
 "
 
 test mymap "$MAPPROG" "(3 . (4 . (5 . (6 . ()))))"
+
+COUNTERPROG="
+(begin
+  (define make-counter (lambda (init)
+    (lambda ()
+      (if (> init 0)
+          (begin (set! init (- init 1)) init)
+          init))))
+  (define count (make-counter 10))
+  (count)
+  (count))
+"
+
+test counter "$COUNTERPROG" 8
+
+FIBOITERPROG="
+(begin
+  (define fibo (lambda (n)
+    (define iter (lambda (a b count)
+      (if (= n count)
+          b
+          (iter (+ a b) a (+ count 1)))))
+    (iter 1 1 0)))
+  (fibo 9))
+"
+
+test fiboiter "$FIBOITERPROG" 55
