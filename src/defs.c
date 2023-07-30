@@ -1,4 +1,5 @@
 #include "lisp.h"
+#define islist(obj) ((obj->type == CONS) || obj == NIL)
 
 int length(Obj* const* args) {
     Obj* scan = *args;
@@ -132,6 +133,10 @@ Obj* write_p(Obj* const* args) {
     return RET(1, NIL);
 }
 
+Obj* list_p(Obj* const* args) {
+    return *args;
+}
+
 /**** Special forms ****/
 
 Obj* quote_sf(Obj* const* exps, Obj* const* env) {
@@ -246,7 +251,7 @@ Obj* set_sf(Obj* const* exps, Obj* const* env) {
 Obj* lambda_sf(Obj* const* exps, Obj* const* env) {
     DEF2(params, body);
 
-    if (length(exps) < 2) {
+    if (length(exps) < 2 || !islist((*exps)->car)) {
         error("invalid lambda syntax");
     }
 
@@ -258,6 +263,19 @@ Obj* lambda_sf(Obj* const* exps, Obj* const* env) {
 
 Obj* begin_sf(Obj* const* exps, Obj* const* env) {
     return eval_sequence(exps, env);
+}
+
+Obj* macro_sf(Obj* const* exps, Obj* const* env) {
+    DEF2(params, body);
+
+    if (length(exps) < 2 || !islist((*exps)->car)) {
+        error("invalid macro syntax");
+    }
+
+    *params = (*exps)->car;
+    *body = (*exps)->cdr;
+
+    return RET(2, make_macro(params, body, env));
 }
 
 #define DEFVAR(var, value)                    \
@@ -283,6 +301,7 @@ void setup_env(Obj* const* env) {
     DEFVAR(">", alloc_primitive(gt_p));
     DEFVAR("<", alloc_primitive(lt_p));
     DEFVAR("write", alloc_primitive(write_p));
+    DEFVAR("list", alloc_primitive(list_p));
 
     DEFVAR("quote", alloc_special_form(quote_sf));
     DEFVAR("or", alloc_special_form(or_sf));
@@ -292,5 +311,6 @@ void setup_env(Obj* const* env) {
     DEFVAR("set!", alloc_special_form(set_sf));
     DEFVAR("lambda", alloc_special_form(lambda_sf));
     DEFVAR("begin", alloc_special_form(begin_sf));
+    DEFVAR("macro", alloc_special_form(macro_sf));
 }
 

@@ -81,6 +81,10 @@ void freemem(Obj* mem) {
     }
 }
 
+#define IS_COMPOUND_OBJ(obj)                              \
+    (((obj)->type == CONS) || ((obj)->type == LAMBDA) ||  \
+    ((obj)->type == MACRO) || ((obj)->type == TAIL_CALL))
+
 void gc() {
     Obj* new_mem = (mem == mem1) ? mem2 : mem1;
     free_ptr = new_mem;
@@ -90,7 +94,7 @@ void gc() {
     }
 
     for(Obj* scan_ptr = new_mem; scan_ptr < free_ptr; scan_ptr++) {
-        if ((scan_ptr->type == CONS) || (scan_ptr->type == LAMBDA)) {
+        if (IS_COMPOUND_OBJ(scan_ptr)) {
             scan_ptr->car = gc_move(scan_ptr->car);
             scan_ptr->cdr = gc_move(scan_ptr->cdr);
         }

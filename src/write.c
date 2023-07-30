@@ -35,6 +35,9 @@ void write(Obj* const* obj) {
         case SPECIAL_FORM:
             printf("special form");
             break;
+        case MACRO:
+            printf("macro");
+            break;
         case BOOLEAN:
             (*obj == TRUE) ? printf("#t") : printf("#f");
             break;

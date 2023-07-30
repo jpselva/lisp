@@ -1,6 +1,12 @@
 #include "lisp.h"
-#define TAIL_CALL_EXP(tc) (tc)->car
-#define TAIL_CALL_ENV(tc) (tc)->cdr
+#define TAIL_CALL_EXP(tc) ((tc)->car)
+#define TAIL_CALL_ENV(tc) ((tc)->cdr)
+
+Obj* make_tail_call(Obj* const* exp, Obj* const* env) {
+    Obj* tc = alloc_cons(exp, env);
+    tc->type = TAIL_CALL;
+    return tc;
+}
 
 Obj* list_of_values(Obj* const* exps, Obj* const* env);
 Obj* eval_compound(Obj* const* exps, Obj* const* env);
@@ -40,17 +46,20 @@ Obj* eval(Obj* const* exp, Obj* const* env) {
 }
 
 Obj* eval_compound(Obj* const* exp, Obj* const* env) {
-    DEF2(operator, operands);
+    DEF3(operator, operands, expanded);
 
     *operator = (*exp)->car;
     *operator = eval(operator, env);
     *operands = (*exp)->cdr;
 
     if ((*operator)->type == SPECIAL_FORM) {
-        return RET(2, (*operator)->special_form(operands, env));
+        return RET(3, (*operator)->special_form(operands, env)); 
+    } else if ((*operator)->type == MACRO) {
+        *expanded = expand_macro(operator, operands);
+        return RET(3, make_tail_call(expanded, env));
     } else {
         *operands = list_of_values(operands, env);
-        return RET(2, apply(operator, operands));
+        return RET(3, apply(operator, operands));
     }
 }
 
@@ -97,8 +106,19 @@ Obj* eval_sequence(Obj* const* exps, Obj* const* env) {
     return RET(3, *value);
 }
 
-Obj* make_tail_call(Obj* const* exp, Obj* const* env) {
-    Obj* tc = alloc_cons(exp, env);
-    tc->type = TAIL_CALL;
-    return tc;
+/* like eval_sequence, but without tail call for last exp */
+Obj* eval_whole_sequence(Obj* const* body, Obj* const* env) {
+    DEF3(exp_scan, exp, value);
+
+    for (*exp_scan = *body; *exp_scan != NIL; *exp_scan = (*exp_scan)->cdr) {
+        if ((*exp_scan)->type != CONS) {
+            error("eval_whole_sequence expects list of expressions");
+        }
+
+        *exp = (*exp_scan)->car;
+        *value = eval(exp, env);
+    }
+
+    return RET(3, *value);
 }
+

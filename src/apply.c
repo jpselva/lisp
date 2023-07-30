@@ -17,7 +17,7 @@ Obj* apply(Obj* const* proc, Obj* const* args) {
 
         *params = lambda_params(*proc);
         *env = lambda_env(*proc);
-        *body  = lambda_body(*proc);
+        *body = lambda_body(*proc);
 
         *env = extend_environment(params, args, env);
         Obj* result = eval_sequence(body, env);

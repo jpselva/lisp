@@ -94,6 +94,10 @@ test and "(and (< 2 3) (+ 4 5))" 9
 
 test and "(and)" "#t"
 
+test list "(list)" "()"
+
+test list "(list 1 (quote a) (+ 1 2))" "(1 . (a . (3 . ())))"
+
 FIBOPROG="
 (begin
     (define fibo
@@ -146,3 +150,20 @@ FIBOITERPROG="
 "
 
 test fiboiter "$FIBOITERPROG" 55
+
+test macro "(begin (define mymacro (macro (x) 1)) (mymacro 'whatever))" 1
+
+MACROPROG="
+(begin
+  (define set2! 
+    (macro (v1 v2 e)
+      (list (quote begin) 
+            (list (quote set!) v1 e) 
+            (list (quote set!) v2 e))))
+  (define v1 1)
+  (define v2 2)
+  (set2! v1 v2 3)
+  (and (= v1 3) (= v2 3)))
+"
+
+test macro "$MACROPROG" "#t"

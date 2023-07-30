@@ -7,6 +7,7 @@ typedef enum {
     STRING,
     SYMBOL,
     LAMBDA,
+    MACRO,
     SPECIAL_FORM,
     BOOLEAN,
     EMPTY_LIST,
@@ -77,6 +78,7 @@ Obj* lookup(Obj* const* var, Obj* const* env);
 /**** eval.c ****/
 Obj* eval(Obj* const* exp, Obj* const* env);
 Obj* eval_sequence(Obj* const* exps, Obj* const* env);
+Obj* eval_whole_sequence(Obj* const* body, Obj* const* env);
 Obj* make_tail_call(Obj* const* exp, Obj* const* env);
 
 /**** apply.c ****/
@@ -88,3 +90,8 @@ void setup_env(Obj* const* env);
 
 /**** write.c ****/
 void write(Obj* const* obj);
+
+/**** macro.c ****/
+Obj* make_macro(Obj* const* params, Obj* const* body, Obj* const* env);
+Obj* expand_macro(Obj* const* macro, Obj* const* exps);
+
