@@ -5,8 +5,8 @@
 #define MEMSZ 65536
 #define STKSZ 16383
 
-Obj* stack[STKSZ];
-Obj** stack_ptr = stack;
+static Obj* stack[STKSZ];
+static Obj** stack_ptr = stack;
 
 Obj** push(Obj* value) {
     if (stack_ptr >=  stack + STKSZ) {
@@ -17,7 +17,7 @@ Obj** push(Obj* value) {
     return stack_ptr++;
 }
 
-void pop(size_t nvars) {
+static void pop(size_t nvars) {
     while((nvars > 0) && (stack_ptr > stack)) {
         stack_ptr--;
         nvars--;
@@ -49,11 +49,11 @@ Obj* popandreturn(size_t nvars, Obj* value) {
 #define SET_CAR(obj, exp) { Obj* _tmp = (exp); (obj)->car = _tmp; }
 #define SET_CDR(obj, exp) { Obj* _tmp = (exp); (obj)->cdr = _tmp; }
 
-Obj mem1[MEMSZ], mem2[MEMSZ];
-Obj* mem = mem1; 
-Obj* free_ptr = mem1;
+static Obj mem1[MEMSZ], mem2[MEMSZ];
+static Obj* mem = mem1; 
+static Obj* free_ptr = mem1;
 
-Obj* gc_move(Obj* old_addr) {
+static Obj* gc_move(Obj* old_addr) {
     switch (old_addr->type) {
         case BOOLEAN:
         case EMPTY_LIST:
@@ -68,7 +68,7 @@ Obj* gc_move(Obj* old_addr) {
     }
 }
 
-void freemem(Obj* mem) {
+static void freemem(Obj* mem) {
     // Free dangling strings from memory
     for(Obj* sweep_ptr = mem; sweep_ptr < mem + MEMSZ; sweep_ptr++) {
         if ((sweep_ptr->type == STRING) || (sweep_ptr->type == SYMBOL)) {
@@ -85,7 +85,7 @@ void freemem(Obj* mem) {
     (((obj)->type == CONS) || ((obj)->type == LAMBDA) ||  \
     ((obj)->type == MACRO) || ((obj)->type == TAIL_CALL))
 
-void gc() {
+static void gc() {
     Obj* new_mem = (mem == mem1) ? mem2 : mem1;
     free_ptr = new_mem;
     
@@ -115,7 +115,7 @@ void cleanup() {
     }
 }
 
-Obj* alloc() {
+static Obj* alloc() {
 #ifndef ALWAYS_GC
     if (free_ptr == mem + MEMSZ) {
         gc();

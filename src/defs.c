@@ -1,7 +1,7 @@
 #include "lisp.h"
 #define islist(obj) ((obj->type == CONS) || obj == NIL)
 
-int length(Obj* const* args) {
+static int length(Obj* const* args) {
     Obj* scan = *args;
     int len;
 
@@ -17,7 +17,7 @@ int length(Obj* const* args) {
 
 /**** Primitive functions ****/
 
-Obj* car_p(Obj* const* args) {
+static Obj* car_p(Obj* const* args) {
     if (length(args) != 1) {
         error("car takes exactly one argument");
     }
@@ -27,7 +27,7 @@ Obj* car_p(Obj* const* args) {
     return (*args)->car->car;
 }
 
-Obj* cdr_p(Obj* const* args) {
+static Obj* cdr_p(Obj* const* args) {
     if (length(args) != 1) {
         error("cdr takes only one argument");
     }
@@ -37,7 +37,7 @@ Obj* cdr_p(Obj* const* args) {
     return (*args)->car->cdr;
 }
 
-Obj* cons_p(Obj* const* args) {
+static Obj* cons_p(Obj* const* args) {
     DEF2(car, cdr);
 
     if (length(args) != 2) {
@@ -47,16 +47,16 @@ Obj* cons_p(Obj* const* args) {
     *cdr = (*args)->cdr->car;
 
     return RET(2, alloc_cons(car, cdr));
-}
+} 
 
-Obj* eq_p(Obj* const* args) {
+static Obj* eq_p(Obj* const* args) {
     if (length(args) != 2) {
         error("eq? takes exactly two arguments");
     }
     return ((*args)->car == (*args)->cdr->car) ? TRUE : FALSE;
 }
 
-Obj* plus_p(Obj* const* args) {
+static  Obj* plus_p(Obj* const* args) {
     int result = 0;
 
     for (Obj* num = *args; num != NIL; num = num->cdr) {
@@ -69,7 +69,7 @@ Obj* plus_p(Obj* const* args) {
     return alloc_number(result);
 }
 
-Obj* minus_p(Obj* const* args) {
+static Obj* minus_p(Obj* const* args) {
     if (length(args) < 1) {
         error("- expects at least one argument");
     } else if ((*args)->car->type != NUMBER) {
@@ -88,7 +88,7 @@ Obj* minus_p(Obj* const* args) {
     return alloc_number(result);
 }
 
-Obj* equal_p(Obj* const* args) {
+static Obj* equal_p(Obj* const* args) {
    if (length(args) != 2) {
        error("= takes exactly two arguments");
    }
@@ -99,7 +99,7 @@ Obj* equal_p(Obj* const* args) {
    return ((*args)->car->number == (*args)->cdr->car->number) ? TRUE : FALSE;
 }
 
-Obj* gt_p(Obj* const* args) {
+static Obj* gt_p(Obj* const* args) {
    if (length(args) != 2) {
        error("> takes exactly two arguments");
    }
@@ -110,7 +110,7 @@ Obj* gt_p(Obj* const* args) {
    return ((*args)->car->number > (*args)->cdr->car->number) ? TRUE : FALSE;
 }
 
-Obj* lt_p(Obj* const* args) {
+static Obj* lt_p(Obj* const* args) {
    if (length(args) != 2) {
        error("< takes exactly two arguments");
    }
@@ -121,7 +121,7 @@ Obj* lt_p(Obj* const* args) {
    return ((*args)->car->number < (*args)->cdr->car->number) ? TRUE : FALSE;
 }
 
-Obj* write_p(Obj* const* args) {
+static Obj* write_p(Obj* const* args) {
     DEF1(obj);
 
     if (length(args) != 1) {
@@ -133,20 +133,20 @@ Obj* write_p(Obj* const* args) {
     return RET(1, NIL);
 }
 
-Obj* list_p(Obj* const* args) {
+static Obj* list_p(Obj* const* args) {
     return *args;
 }
 
 /**** Special forms ****/
 
-Obj* quote_sf(Obj* const* exps, Obj* const* env) {
+static Obj* quote_sf(Obj* const* exps, Obj* const* env) {
     if (length(exps) != 1) {
         error("quote expects exactly one expression");
     }
     return (*exps)->car;
 }
 
-Obj* or_sf(Obj* const* exps, Obj* const* env) {
+static Obj* or_sf(Obj* const* exps, Obj* const* env) {
     DEF2(exp_scan, exp);
 
     Obj* result = FALSE;
@@ -171,7 +171,7 @@ Obj* or_sf(Obj* const* exps, Obj* const* env) {
     return RET(2, result);
 }
 
-Obj* and_sf(Obj* const* exps, Obj* const* env) {
+static Obj* and_sf(Obj* const* exps, Obj* const* env) {
     DEF2(exp_scan, exp);
 
     Obj* result = TRUE;
@@ -196,7 +196,7 @@ Obj* and_sf(Obj* const* exps, Obj* const* env) {
     return RET(2, result);
 }
 
-Obj* if_sf(Obj* const* exps, Obj* const* env) {
+static Obj* if_sf(Obj* const* exps, Obj* const* env) {
     DEF3(predicate, consequent, alternative);
 
     int exps_length = length(exps);
@@ -218,7 +218,7 @@ Obj* if_sf(Obj* const* exps, Obj* const* env) {
     }
 }
 
-Obj* define_sf(Obj* const* exps, Obj* const* env) {
+static Obj* define_sf(Obj* const* exps, Obj* const* env) {
     DEF2(var, value);
 
     if (length(exps) != 2 || (*exps)->car->type != SYMBOL) {
@@ -233,7 +233,7 @@ Obj* define_sf(Obj* const* exps, Obj* const* env) {
     return RET(2, *value);
 }
 
-Obj* set_sf(Obj* const* exps, Obj* const* env) {
+static Obj* set_sf(Obj* const* exps, Obj* const* env) {
     DEF2(var, value);
 
     if (length(exps) != 2 || (*exps)->car->type != SYMBOL) {
@@ -248,7 +248,7 @@ Obj* set_sf(Obj* const* exps, Obj* const* env) {
     return RET(2, *value);
 }
 
-Obj* lambda_sf(Obj* const* exps, Obj* const* env) {
+static Obj* lambda_sf(Obj* const* exps, Obj* const* env) {
     DEF2(params, body);
 
     if (length(exps) < 2 || !islist((*exps)->car)) {
@@ -261,11 +261,11 @@ Obj* lambda_sf(Obj* const* exps, Obj* const* env) {
     return RET(2, make_lambda(params, body, env));
 }
 
-Obj* begin_sf(Obj* const* exps, Obj* const* env) {
+static Obj* begin_sf(Obj* const* exps, Obj* const* env) {
     return eval_sequence(exps, env);
 }
 
-Obj* macro_sf(Obj* const* exps, Obj* const* env) {
+static Obj* macro_sf(Obj* const* exps, Obj* const* env) {
     DEF2(params, body);
 
     if (length(exps) < 2 || !islist((*exps)->car)) {

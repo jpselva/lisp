@@ -1,6 +1,6 @@
 #include "lisp.h"
 
-Obj constants[] = {
+static Obj constants[] = {
  { .type = BOOLEAN },
  { .type = BOOLEAN },
  { .type = EMPTY_LIST }, 

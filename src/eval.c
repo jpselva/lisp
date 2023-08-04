@@ -8,8 +8,8 @@ Obj* make_tail_call(Obj* const* exp, Obj* const* env) {
     return tc;
 }
 
-Obj* list_of_values(Obj* const* exps, Obj* const* env);
-Obj* eval_compound(Obj* const* exps, Obj* const* env);
+static Obj* list_of_values(Obj* const* exps, Obj* const* env);
+static Obj* eval_compound(Obj* const* exps, Obj* const* env);
 
 Obj* eval(Obj* const* exp, Obj* const* env) {
     DEF3(current_exp, current_env, value);
@@ -45,7 +45,7 @@ Obj* eval(Obj* const* exp, Obj* const* env) {
     return RET(3, *value);
 }
 
-Obj* eval_compound(Obj* const* exp, Obj* const* env) {
+static Obj* eval_compound(Obj* const* exp, Obj* const* env) {
     DEF3(operator, operands, expanded);
 
     *operator = (*exp)->car;
@@ -63,7 +63,7 @@ Obj* eval_compound(Obj* const* exp, Obj* const* env) {
     }
 }
 
-Obj* list_of_values(Obj* const* exps, Obj* const* env) {
+static Obj* list_of_values(Obj* const* exps, Obj* const* env) {
     DEF4(head, entry, exp_scan, tmp);
 
     *head = alloc_cons(&NIL, &NIL);

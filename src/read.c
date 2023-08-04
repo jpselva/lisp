@@ -13,7 +13,7 @@ char peek(FILE* stream) {
 
 Obj* read(FILE*);
 
-Obj* readlist(FILE* stream) {
+static Obj* readlist(FILE* stream) {
     DEF3(head, exp, tmp);
 
     *head = alloc_cons(&NIL, &NIL);
@@ -34,7 +34,7 @@ Obj* readlist(FILE* stream) {
     return RET(3, (*head)->cdr);
 }
 
-Obj* readstring(FILE* stream) {
+static Obj* readstring(FILE* stream) {
     char string[MAXTEXT];
     char* s = string;
 
@@ -48,7 +48,7 @@ Obj* readstring(FILE* stream) {
 }
 
 
-Obj* readnumber(FILE* stream) {
+static Obj* readnumber(FILE* stream) {
     int number = 0;
     char c;
 
@@ -61,7 +61,7 @@ Obj* readnumber(FILE* stream) {
     return alloc_number(number);
 }
 
-Obj* readsymbol(FILE* stream) {
+static Obj* readsymbol(FILE* stream) {
     char symbol[MAXTEXT];
     char* s = symbol;
 
