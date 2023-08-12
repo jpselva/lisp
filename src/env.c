@@ -6,11 +6,11 @@
 #define FIRST_FRAME(env) ((env)->car)
 #define REST_FRAMES(env) ((env)->cdr)
 
-Obj* make_frame(Obj* const* vars, Obj* const* values) {
+static Obj* make_frame(Obj* const* vars, Obj* const* values) {
     return alloc_cons(vars, values);
 }
 
-void set_frame(Obj* const* frame, Obj* const* vars, Obj* const* values) {
+static void set_frame(Obj* const* frame, Obj* const* vars, Obj* const* values) {
     SET_CAR(*frame, *vars);
     SET_CDR(*frame, *values);
 }
