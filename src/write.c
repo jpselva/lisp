@@ -17,7 +17,8 @@ void write(Obj* const* obj) {
 
             RET(1, NIL);
             break;
-       } case NUMBER:
+        } 
+        case NUMBER:
             printf("%d", (*obj)->number);
             break;
         case PRIMITIVE:

@@ -88,11 +88,37 @@ static Obj* gc_move(Obj* old_addr) {
         case MOVED_BY_GC:
             return old_addr->forwarding_addr;
         default:
+            if (IS_STRING_OBJ(free_ptr)) {
+                free(free_ptr->string);
+            }
+
             *free_ptr = *old_addr;
             old_addr->type = MOVED_BY_GC;
             old_addr->forwarding_addr = free_ptr;
             return free_ptr++;
     }
+}
+
+static void gc() {
+    // Stop-and-copy garbage collection
+    Obj* new_mem = (mem == mem1) ? mem2 : mem1;
+    free_ptr = new_mem;
+    
+    for (int i = 0; i < (stack_ptr - stack); i++) {
+        stack[i] = gc_move(stack[i]);
+    }
+
+    for(Obj* scan_ptr = new_mem; scan_ptr < free_ptr; scan_ptr++) {
+        if (IS_COMPOUND_OBJ(scan_ptr)) {
+            scan_ptr->car = gc_move(scan_ptr->car);
+            scan_ptr->cdr = gc_move(scan_ptr->cdr);
+        }
+    }
+
+    if (free_ptr == new_mem + MEMSZ) {
+        error("memory is full");
+    }
+    mem = new_mem;
 }
 
 static void freemem(Obj* mem) {
@@ -108,31 +134,8 @@ static void freemem(Obj* mem) {
     }
 }
 
-static void gc() {
-    Obj* new_mem = (mem == mem1) ? mem2 : mem1;
-    free_ptr = new_mem;
-    
-    for (int i = 0; i < (stack_ptr - stack); i++) {
-        stack[i] = gc_move(stack[i]);
-    }
-
-    for(Obj* scan_ptr = new_mem; scan_ptr < free_ptr; scan_ptr++) {
-        if (IS_COMPOUND_OBJ(scan_ptr)) {
-            scan_ptr->car = gc_move(scan_ptr->car);
-            scan_ptr->cdr = gc_move(scan_ptr->cdr);
-        }
-    }
-
-    freemem(mem);
-
-    if (free_ptr == new_mem + MEMSZ) {
-        error("memory is full");
-    }
-    mem = new_mem;
-}
-
 void cleanup() {
-    freemem(mem);
+    freemem(mem1); freemem(mem2);
     if (stack_ptr != stack) {
         error("finished execution with unpopped variables in the stack");
     }
