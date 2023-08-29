@@ -207,7 +207,7 @@ static Obj* if_sf(Obj* const* exps, Obj* const* env) {
 
     *predicate = (*exps)->car;
     *consequent = (*exps)->cdr->car;
-    *alternative = (*exps)->cdr->cdr->car;
+    *alternative = (exps_length == 3) ? (*exps)->cdr->cdr->car : NIL;
 
     if (eval(predicate, env) != FALSE) {
         return RET(3, make_tail_call(consequent, env));
