@@ -167,3 +167,14 @@ MACROPROG="
 "
 
 test macro "$MACROPROG" "#t"
+
+# program below used to cause a segfault
+IFALTPROG="
+(begin
+  (define foo (lambda (n)
+      (if (> n 0)
+          (foo (- n 1)))))
+  (foo 1))
+"
+
+test "if with no alternative" "$IFALTPROG" "#t"
